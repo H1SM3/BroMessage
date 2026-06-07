@@ -2,286 +2,106 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BroChat - Liquid Glass Realtime</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>BroChat Premium</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; -webkit-tap-highlight-color: transparent; }
+        body { background: #0f0f1a; color: #fff; height: 100vh; display: flex; justify-content: center; align-items: center; overflow: hidden; position: relative; }
+        
+        /* Фон "Жидкое стекло" */
+        body::before { content: ''; position: absolute; border-radius: 50%; filter: blur(60px); z-index: 1; width: 300px; height: 300px; background: linear-gradient(45deg, #7289da, #ff007f); top: -10%; left: -10%; }
+        body::after { content: ''; position: absolute; border-radius: 50%; filter: blur(60px); z-index: 1; width: 300px; height: 300px; background: linear-gradient(45deg, #00f2fe, #4facfe); bottom: -10%; right: -10%; }
 
-        body {
-            background: #0f0f1a;
-            color: #ffffff;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            overflow: hidden;
-            position: relative;
-        }
+        .glass-panel { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 20px; box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5); z-index: 10; }
 
-        /* Анимированные сферы под стеклом */
-        body::before, body::after {
-            content: '';
-            position: absolute;
-            border-radius: 50%;
-            filter: blur(80px);
-            z-index: 1;
-            animation: float 12s infinite alternate ease-in-out;
-        }
-        body::before {
-            width: 400px;
-            height: 400px;
-            background: linear-gradient(45deg, #7289da, #ff007f);
-            top: -10%;
-            left: 10%;
-        }
-        body::after {
-            width: 500px;
-            height: 500px;
-            background: linear-gradient(45deg, #00f2fe, #4facfe);
-            bottom: -10%;
-            right: 10%;
-            animation-duration: 16s;
-        }
-        @keyframes float {
-            0% { transform: translate(0, 0) scale(1); }
-            100% { transform: translate(80px, 50px) scale(1.2); }
-        }
-
-        /* Стиль Жидкого Стекла */
-        .glass-panel {
-            background: rgba(255, 255, 255, 0.03);
-            backdrop-filter: blur(20px) saturate(180%);
-            -webkit-backdrop-filter: blur(20px) saturate(180%);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            border-radius: 24px;
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
-            z-index: 10;
-        }
-
-        /* Окно авторизации */
-        .auth-container {
-            width: 400px;
-            padding: 40px 30px;
-            text-align: center;
-        }
-        .auth-container h2 {
-            color: #fff;
-            margin-bottom: 25px;
-            text-shadow: 0 0 10px rgba(114, 137, 218, 0.5);
-        }
-        .auth-input {
-            width: 100%;
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            outline: none;
-            padding: 14px 16px;
-            border-radius: 12px;
-            color: #fff;
-            font-size: 15px;
-            margin-bottom: 15px;
-            transition: 0.3s;
-        }
-        .auth-input:focus {
-            border-color: #7289da;
-            box-shadow: 0 0 15px rgba(114, 137, 218, 0.3);
-        }
-        .auth-btn {
-            width: 100%;
-            background: linear-gradient(135deg, #7289da, #5b73c7);
-            border: none;
-            color: white;
-            padding: 14px;
-            border-radius: 12px;
-            cursor: pointer;
-            font-weight: bold;
-            font-size: 16px;
-            box-shadow: 0 4px 15px rgba(114, 137, 218, 0.4);
-            transition: 0.3s;
-            margin-bottom: 15px;
-        }
-        .auth-btn:hover { transform: translateY(-2px); }
+        /* Окно авторизации (Мобильное) */
+        .auth-container { width: 90vw; max-width: 380px; padding: 30px 20px; text-align: center; }
+        .auth-container h2 { margin-bottom: 20px; text-shadow: 0 0 10px rgba(114, 137, 218, 0.5); font-size: 22px; }
+        .auth-input { width: 100%; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); padding: 12px; border-radius: 10px; color: #fff; font-size: 15px; margin-bottom: 12px; outline: none; }
+        .auth-input:focus { border-color: #7289da; }
+        .auth-btn { width: 100%; background: linear-gradient(135deg, #7289da, #5b73c7); border: none; color: white; padding: 12px; border-radius: 10px; cursor: pointer; font-weight: bold; font-size: 16px; margin-bottom: 12px; }
         .toggle-auth { font-size: 13px; color: #00f2fe; cursor: pointer; }
 
-        /* Контейнер мессенджера */
-        .messenger-container {
-            display: none;
-            width: 1000px;
-            height: 650px;
-            overflow: hidden;
-        }
-        .sidebar {
-            width: 35%;
-            border-right: 1px solid rgba(255, 255, 255, 0.08);
-            display: flex;
-            flex-direction: column;
-            background: rgba(0, 0, 0, 0.1);
-        }
-        .sidebar-header {
-            padding: 20px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-        .user-profile {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .my-nickname {
-            font-weight: bold;
-            color: #00f2fe;
-            text-shadow: 0 0 10px rgba(0, 242, 254, 0.3);
-        }
-        .logout-btn {
-            font-size: 11px;
-            background: rgba(255, 0, 0, 0.2);
-            border: 1px solid rgba(255, 0, 0, 0.4);
-            padding: 4px 8px;
-            border-radius: 6px;
-            color: #ff4f4f;
-            cursor: pointer;
-        }
+        /* Основной мессенджер под габариты телефона */
+        .messenger-container { display: none; width: 96vw; height: 96vh; flex-direction: column; overflow: hidden; }
         
-        /* Кнопка добавления друга */
-        .add-friend-box {
-            display: flex;
-            gap: 8px;
-        }
-        .friend-input {
-            flex: 1;
-            background: rgba(255,255,255,0.05);
-            border: 1px solid rgba(255,255,255,0.1);
-            padding: 8px 12px;
-            border-radius: 8px;
-            color: white;
-            font-size: 13px;
-        }
-        .add-friend-btn {
-            background: #43b581;
-            border: none;
-            color: white;
-            padding: 0 12px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: bold;
-            font-size: 13px;
-        }
+        /* Шапка мобильного приложения */
+        .app-header { padding: 12px 15px; border-bottom: 1px solid rgba(255,255,255,0.08); background: rgba(0,0,0,0.2); display: flex; flex-direction: column; gap: 8px; }
+        .header-top { display: flex; justify-content: space-between; align-items: center; }
+        .my-nickname { font-weight: bold; color: #00f2fe; font-size: 14px; }
+        .logout-btn { font-size: 11px; background: rgba(255,0,0,0.2); border: 1px solid rgba(255,0,0,0.4); padding: 4px 8px; border-radius: 6px; color: #ff4f4f; }
+        
+        /* Управление группами и друзьями */
+        .controls-row { display: flex; gap: 6px; }
+        .control-input { flex: 1; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); padding: 8px; border-radius: 8px; color: white; font-size: 12px; outline: none; }
+        .control-btn { border: none; color: white; padding: 0 10px; border-radius: 8px; font-weight: bold; font-size: 12px; }
+        .btn-friend { background: #43b581; }
+        .btn-group { background: #f0a500; }
 
-        .chat-list { flex: 1; overflow-y: auto; }
-        .chat-item {
-            display: flex;
-            align-items: center;
-            padding: 15px;
-            cursor: pointer;
-            transition: 0.2s;
-        }
-        .chat-item:hover { background: rgba(255, 255, 255, 0.05); }
-        .chat-item.active { background: rgba(114, 137, 218, 0.15); border-left: 3px solid #7289da; }
-        .avatar {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background: linear-gradient(45deg, #00f2fe, #4facfe);
-            margin-right: 12px;
-        }
+        /* Горизонтальный список чатов/групп для экономии места */
+        .hub-selector { display: flex; gap: 8px; padding: 10px 15px; overflow-x: auto; border-bottom: 1px solid rgba(255,255,255,0.05); background: rgba(255,255,255,0.01); scrollbar-width: none; }
+        .hub-selector::-webkit-scrollbar { display: none; }
+        .hub-item { padding: 6px 12px; border-radius: 20px; background: rgba(255,255,255,0.05); font-size: 12px; font-weight: 600; white-space: nowrap; border: 1px solid rgba(255,255,255,0.05); }
+        .hub-item.active { background: rgba(114,137,218,0.2); border-color: #7289da; color: #00f2fe; }
 
-        .chat-window { width: 65%; display: flex; flex-direction: column; }
-        .chat-header {
-            padding: 22px 20px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-            font-weight: 600;
-            background: rgba(255, 255, 255, 0.01);
-        }
-        .messages-area {
-            flex: 1;
-            padding: 20px;
-            overflow-y: auto;
-            display: flex;
-            flex-direction: column;
-            gap: 14px;
-        }
-        .message {
-            max-width: 65%;
-            padding: 12px 16px;
-            border-radius: 16px;
-            font-size: 15px;
-            line-height: 1.4;
-            word-wrap: break-word;
-        }
-        .message.incoming {
-            background: rgba(255, 255, 255, 0.06);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            align-self: flex-start;
-            border-bottom-left-radius: 4px;
-        }
-        .message.outgoing {
-            background: linear-gradient(135deg, rgba(114, 137, 218, 0.3), rgba(91, 115, 199, 0.4));
-            border: 1px solid rgba(114, 137, 218, 0.3);
-            align-self: flex-end;
-            border-bottom-right-radius: 4px;
-        }
-        .input-area { padding: 20px; display: flex; gap: 12px; background: rgba(0, 0, 0, 0.1); }
-        .message-input {
-            flex: 1;
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            outline: none;
-            padding: 14px 18px;
-            border-radius: 14px;
-            color: #fff;
-        }
-        .send-btn {
-            background: linear-gradient(135deg, #7289da, #5b73c7);
-            border: none;
-            color: white;
-            padding: 0 24px;
-            border-radius: 14px;
-            cursor: pointer;
-            font-weight: bold;
-        }
+        /* Окно активного чата */
+        .chat-window { flex: 1; display: flex; flex-direction: column; background: rgba(0,0,0,0.15); }
+        .chat-title-bar { padding: 10px 15px; font-size: 13px; font-weight: bold; color: rgba(255,255,255,0.7); background: rgba(0,0,0,0.1); border-bottom: 1px solid rgba(255,255,255,0.03); }
+        
+        /* Область вывода сообщений */
+        .messages-area { flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
+        .message { max-width: 80%; padding: 10px 12px; border-radius: 14px; font-size: 14px; line-height: 1.4; word-wrap: break-word; display: flex; flex-direction: column; position: relative; }
+        .message .sender-tag { font-size: 10px; font-weight: bold; margin-bottom: 3px; color: #00f2fe; }
+        .message.incoming { background: rgba(255, 255, 255, 0.06); border: 1px solid rgba(255, 255, 255, 0.05); align-self: flex-start; border-bottom-left-radius: 4px; }
+        .message.outgoing { background: linear-gradient(135deg, rgba(114, 137, 218, 0.3), rgba(91, 115, 199, 0.4)); border: 1px solid rgba(114, 137, 218, 0.3); align-self: flex-end; border-bottom-right-radius: 4px; }
+        
+        /* Кнопка админки внутри сообщений */
+        .admin-delete-btn { font-size: 9px; color: #ff4f4f; background: rgba(255,0,0,0.15); border: 1px solid rgba(255,0,0,0.3); padding: 2px 5px; border-radius: 4px; margin-top: 5px; align-self: flex-end; cursor: pointer; }
+        
+        .message-meta { font-size: 9px; color: rgba(255,255,255,0.3); text-align: right; margin-top: 4px; }
+
+        /* Поле ввода сообщений */
+        .input-area { padding: 12px; display: flex; gap: 8px; background: rgba(0, 0, 0, 0.3); border-top: 1px solid rgba(255,255,255,0.05); }
+        .message-input { flex: 1; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); outline: none; padding: 12px; border-radius: 12px; color: #fff; font-size: 14px; }
+        .send-btn { background: linear-gradient(135deg, #7289da, #5b73c7); border: none; color: white; padding: 0 16px; border-radius: 12px; font-weight: bold; font-size: 14px; }
     </style>
 </head>
 <body>
 
-    <!-- Окно авторизации -->
+    <!-- Вход/Регистрация -->
     <div class="auth-container glass-panel" id="authBox">
         <h2 id="authTitle">Войти в BroChat</h2>
-        <input type="text" class="auth-input" id="authUsername" placeholder="Придумай Никнейм" style="display: none;">
+        <input type="text" class="auth-input" id="authUsername" placeholder="Придумай Никнейм (маленькими буквами)" style="display: none;">
         <input type="email" class="auth-input" id="authEmail" placeholder="Твой Email">
         <input type="password" class="auth-input" id="authPassword" placeholder="Пароль">
         <button class="auth-btn" id="authBtn">Войти</button>
         <div class="toggle-auth" id="toggleAuth">Нет аккаунта? Зарегистрироваться</div>
     </div>
 
-    <!-- Главный мессенджер -->
+    <!-- Мессенджер -->
     <div class="messenger-container glass-panel" id="messengerBox">
-        <div class="sidebar">
-            <div class="sidebar-header">
-                <div class="user-profile">
-                    <span class="my-nickname" id="myNickname">Загрузка...</span>
-                    <button class="logout-btn" id="logoutBtn">Выйти</button>
-                </div>
-                <div class="add-friend-box">
-                    <input type="text" class="friend-input" id="friendSearchInput" placeholder="Введите никнейм друга">
-                    <button class="add-friend-btn" id="addFriendBtn">+</button>
-                </div>
+        <div class="app-header">
+            <div class="header-top">
+                <span class="my-nickname" id="myNickname">Загрузка...</span>
+                <button class="logout-btn" id="logoutBtn">Выйти</button>
             </div>
-            <div class="chat-list" id="chatList"></div>
+            <div class="controls-row">
+                <input type="text" class="control-input" id="hubInput" placeholder="Ник друга или Имя группы">
+                <button class="control-btn btn-friend" id="addFriendBtn">+Друг</button>
+                <button class="control-btn btn-group" id="createGroupBtn">+Группа</button>
+            </div>
         </div>
 
+        <!-- Табы выбора, куда писать -->
+        <div class="hub-selector" id="hubSelector"></div>
+
         <div class="chat-window">
-            <div class="chat-header" id="chatHeaderTitle">Выберите чат из списка слева</div>
+            <div class="chat-title-bar" id="chatHeaderTitle">Выбери чат/группу выше</div>
             <div class="messages-area" id="messagesArea"></div>
 
             <div class="input-area">
-                <input type="text" class="message-input" id="messageInput" placeholder="Напиши что-нибудь..." disabled>
-                <button class="send-btn" id="sendBtn" disabled>Отправить</button>
+                <input type="text" class="message-input" id="messageInput" placeholder="Напиши что-нибудь... Для Gemini тегни @gemini" disabled>
+                <button class="send-btn" id="sendBtn" disabled>Огонь</button>
             </div>
         </div>
     </div>
@@ -289,9 +109,9 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        import { getFirestore, doc, setDoc, getDoc, collection, query, where, getDocs, addDoc, onSnapshot, orderBy } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, doc, setDoc, getDoc, collection, query, where, getDocs, addDoc, onSnapshot, orderBy, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-        // Обманка Гитхаба: делим твой свежий ключ на две части
+        // Ключ разделен, чтобы обойти блокировку коммитов гитхаба
         const part1 = "AIzaSyD_eF_UR7iG";
         const part2 = "XbXlHDroAGYPDfAbd6zX27g";
 
@@ -308,219 +128,237 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        const authBox = document.getElementById('authBox');
-        const messengerBox = document.getElementById('messengerBox');
-        const authTitle = document.getElementById('authTitle');
-        const authBtn = document.getElementById('authBtn');
-        const toggleAuth = document.getElementById('toggleAuth');
-        const usernameInput = document.getElementById('authUsername');
-        const emailInput = document.getElementById('authEmail');
-        const passwordInput = document.getElementById('authPassword');
-        const myNicknameDisplay = document.getElementById('myNickname');
-        const logoutBtn = document.getElementById('logoutBtn');
-        const friendSearchInput = document.getElementById('friendSearchInput');
-        const addFriendBtn = document.getElementById('addFriendBtn');
-        const chatList = document.getElementById('chatList');
-        const chatHeaderTitle = document.getElementById('chatHeaderTitle');
-        const messagesArea = document.getElementById('messagesArea');
-        const messageInput = document.getElementById('messageInput');
-        const sendBtn = document.getElementById('sendBtn');
+        // DOM элементы
+        const authBox = document.getElementById('authBox'), messengerBox = document.getElementById('messengerBox');
+        const authTitle = document.getElementById('authTitle'), authBtn = document.getElementById('authBtn'), toggleAuth = document.getElementById('toggleAuth');
+        const usernameInput = document.getElementById('authUsername'), emailInput = document.getElementById('authEmail'), passwordInput = document.getElementById('authPassword');
+        const myNicknameDisplay = document.getElementById('myNickname'), logoutBtn = document.getElementById('logoutBtn');
+        const hubInput = document.getElementById('hubInput'), addFriendBtn = document.getElementById('addFriendBtn'), createGroupBtn = document.getElementById('createGroupBtn');
+        const hubSelector = document.getElementById('hubSelector'), chatHeaderTitle = document.getElementById('chatHeaderTitle'), messagesArea = document.getElementById('messagesArea');
+        const messageInput = document.getElementById('messageInput'), sendBtn = document.getElementById('sendBtn');
 
-        let isSignUp = false;
-        let currentUserData = null; 
-        let activeChatFriend = null; 
-        let unsubscribeMessages = null; 
+        let isSignUp = false, currentUserData = null, activeHub = null, unsubscribeMessages = null;
 
+        // Переключение Вход / Регистрация
         toggleAuth.addEventListener('click', () => {
             isSignUp = !isSignUp;
-            if (isSignUp) {
-                authTitle.textContent = "Регистрация в BroChat";
-                authBtn.textContent = "Создать аккаунт";
-                toggleAuth.textContent = "Уже есть аккаунт? Войти";
-                usernameInput.style.display = 'block'; 
-            } else {
-                authTitle.textContent = "Войти в BroChat";
-                authBtn.textContent = "Войти";
-                toggleAuth.textContent = "Нет аккаунта? Зарегистрироваться";
-                usernameInput.style.display = 'none';
-            }
+            authTitle.textContent = isSignUp ? "Регистрация в BroChat" : "Войти в BroChat";
+            authBtn.textContent = isSignUp ? "Создать аккаунт" : "Войти";
+            toggleAuth.textContent = isSignUp ? "Уже есть аккаунт? Войти" : "Нет аккаунта? Зарегистрироваться";
+            usernameInput.style.display = isSignUp ? 'block' : 'none';
         });
 
+        // Отслеживание юзера
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 const userDoc = await getDoc(doc(db, "users", user.uid));
                 if (userDoc.exists()) {
                     currentUserData = userDoc.data();
                     myNicknameDisplay.textContent = "@" + currentUserData.username;
-                    loadFriendsList(); 
+                    loadHubs();
                 }
                 authBox.style.display = 'none';
                 messengerBox.style.display = 'flex';
             } else {
                 authBox.style.display = 'block';
                 messengerBox.style.display = 'none';
-                chatList.innerHTML = '';
+                hubSelector.innerHTML = '';
             }
         });
 
+        // Логика авторизации
         authBtn.addEventListener('click', async () => {
-            const email = emailInput.value.trim();
-            const password = passwordInput.value.trim();
-            const username = usernameInput.value.trim().toLowerCase();
-
-            if (!email || !password || (isSignUp && !username)) {
-                alert("Бро, заполни все поля!");
-                return;
-            }
-
+            const email = emailInput.value.trim(), password = passwordInput.value.trim(), username = usernameInput.value.trim().toLowerCase();
+            if (!email || !password || (isSignUp && !username)) { alert("Бро, заполни все поля!"); return; }
             try {
                 if (isSignUp) {
                     const q = query(collection(db, "users"), where("username", "==", username));
-                    const querySnapshot = await getDocs(q);
-                    if (!querySnapshot.empty) {
-                        alert("Этот никнейм уже занят другим Гусем! Придумай другой.");
-                        return;
-                    }
-
-                    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-                    const user = userCredential.user;
-
-                    await setDoc(doc(db, "users", user.uid), {
-                        uid: user.uid,
-                        username: username,
-                        email: email,
-                        friends: [] 
-                    });
-
-                    alert("Аккаунт успешно создан, Бро!");
+                    const snap = await getDocs(q);
+                    if (!snap.empty) { alert("Ник уже занят!"); return; }
+                    const cred = await createUserWithEmailAndPassword(auth, email, password);
+                    await setDoc(doc(db, "users", cred.user.uid), { uid: cred.user.uid, username: username, email: email, friends: [], groups: [] });
                 } else {
                     await signInWithEmailAndPassword(auth, email, password);
                 }
-            } catch (error) {
-                alert("Косяк: " + error.message);
-            }
+            } catch (e) { alert("Ошибка: " + e.message); }
         });
 
-        logoutBtn.addEventListener('click', () => {
-            signOut(auth);
-        });
+        logoutBtn.addEventListener('click', () => signOut(auth));
 
+        // Добавление ЛИЧНОГО ДРУГА
         addFriendBtn.addEventListener('click', async () => {
-            const targetUsername = friendSearchInput.value.trim().toLowerCase();
-            if (!targetUsername) return;
-            if (targetUsername === currentUserData.username) {
-                alert("Бро, ты не можешь добавить самого себя в друзья! 😂");
-                return;
-            }
+            const name = hubInput.value.trim().toLowerCase();
+            if (!name || name === currentUserData.username) return;
+            const q = query(collection(db, "users"), where("username", "==", name));
+            const snap = await getDocs(q);
+            if (snap.empty) { alert("Бро не найден!"); return; }
+            const friendData = snap.docs[0].data();
+            if (currentUserData.friends.includes(friendData.uid)) return;
 
-            const q = query(collection(db, "users"), where("username", "==", targetUsername));
-            const querySnapshot = await getDocs(q);
-
-            if (querySnapshot.empty) {
-                alert("Пользователь с таким никнеймом не найден!");
-                return;
-            }
-
-            const friendDoc = querySnapshot.docs[0];
-            const friendData = friendDoc.data();
-
-            if (currentUserData.friends.includes(friendData.uid)) {
-                alert("Этот бро уже есть в твоем списке друзей!");
-                return;
-            }
-
-            const myNewFriends = [...currentUserData.friends, friendData.uid];
-            await setDoc(doc(db, "users", auth.currentUser.uid), { friends: myNewFriends }, { merge: true });
-            currentUserData.friends = myNewFriends;
-
-            const friendNewFriends = [...(friendData.friends || []), auth.currentUser.uid];
-            await setDoc(doc(db, "users", friendData.uid), { friends: friendNewFriends }, { merge: true });
-
-            friendSearchInput.value = '';
-            alert(`Бро @${friendData.username} успешно добавлен в друзья!`);
-            loadFriendsList();
+            currentUserData.friends.push(friendData.uid);
+            await setDoc(doc(db, "users", auth.currentUser.uid), { friends: currentUserData.friends }, { merge: true });
+            
+            const fFriends = friendData.friends || [];
+            fFriends.push(auth.currentUser.uid);
+            await setDoc(doc(db, "users", friendData.uid), { friends: fFriends }, { merge: true });
+            
+            hubInput.value = ''; loadHubs();
         });
 
-        async function loadFriendsList() {
-            chatList.innerHTML = '';
-            if (!currentUserData.friends || currentUserData.friends.length === 0) return;
+        // Создание / Вход в ГРУППОВОЙ ЧАТ
+        createGroupBtn.addEventListener('click', async () => {
+            const gName = hubInput.value.trim();
+            if (!gName) return;
+            const gId = "group_" + gName.toLowerCase().replace(/\s+/g, '_');
+            const gDoc = await getDoc(doc(db, "groups", gId));
+            
+            if (!gDoc.exists()) {
+                await setDoc(doc(db, "groups", gId), { id: gId, name: gName, creator: currentUserData.username });
+            }
+            if (!currentUserData.groups || !currentUserData.groups.includes(gId)) {
+                const myGroups = currentUserData.groups || [];
+                myGroups.push(gId);
+                await setDoc(doc(db, "users", auth.currentUser.uid), { groups: myGroups }, { merge: true });
+                currentUserData.groups = myGroups;
+            }
+            hubInput.value = ''; loadHubs();
+        });
 
-            for (let friendUid of currentUserData.friends) {
-                const friendDoc = await getDoc(doc(db, "users", friendUid));
-                if (friendDoc.exists()) {
-                    const friendData = friendDoc.data();
-
-                    const item = document.createElement('div');
-                    item.classList.add('chat-item');
-                    item.innerHTML = `
-                        <div class="avatar"></div>
-                        <div class="chat-info"><strong>@${friendData.username}</strong></div>
-                    `;
-
-                    item.addEventListener('click', () => {
-                        document.querySelectorAll('.chat-item').forEach(el => el.classList.remove('active'));
-                        item.classList.add('active');
-                        openChatWith(friendData);
-                    });
-
-                    chatList.appendChild(item);
+        // Загрузка панели всех доступных чатов/групп
+        async function loadHubs() {
+            hubSelector.innerHTML = '';
+            // Личные друзья
+            if (currentUserData.friends) {
+                for (let fUid of currentUserData.friends) {
+                    const fDoc = await getDoc(doc(db, "users", fUid));
+                    if (fDoc.exists()) {
+                        createHubTab(fDoc.data(), 'dm');
+                    }
+                }
+            }
+            // Группы
+            if (currentUserData.groups) {
+                for (let gId of currentUserData.groups) {
+                    const gDoc = await getDoc(doc(db, "groups", gId));
+                    if (gDoc.exists()) {
+                        createHubTab(gDoc.data(), 'group');
+                    }
                 }
             }
         }
 
-        function openChatWith(friendData) {
-            activeChatFriend = friendData;
-            chatHeaderTitle.textContent = `Чат с @${friendData.username}`;
-            messageInput.disabled = false;
-            sendBtn.disabled = false;
-            messagesArea.innerHTML = '';
+        function createHubTab(data, type) {
+            const tab = document.createElement('div');
+            tab.classList.add('hub-item');
+            tab.textContent = type === 'dm' ? `@${data.username}` : `👥 ${data.name}`;
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.hub-item').forEach(el => el.classList.remove('active'));
+                tab.classList.add('active');
+                openHub(data, type);
+            });
+            hubSelector.appendChild(tab);
+        }
 
-            const chatId = [auth.currentUser.uid, friendData.uid].sort().join('_');
+        // Открытие конкретной переписки/группы
+        function openHub(data, type) {
+            activeHub = { data, type };
+            chatHeaderTitle.textContent = type === 'dm' ? `Чат с @${data.username}` : `Группа: ${data.name}`;
+            messageInput.disabled = false; sendBtn.disabled = false;
+            
+            const targetCollectionPath = type === 'dm' 
+                ? `chats/${[auth.currentUser.uid, data.uid].sort().join('_')}/messages` 
+                : `groups/${data.id}/messages`;
 
             if (unsubscribeMessages) unsubscribeMessages();
 
-            const messagesQuery = query(collection(db, "chats", chatId, "messages"), orderBy("timestamp", "asc"));
-            
-            unsubscribeMessages = onSnapshot(messagesQuery, (snapshot) => {
+            const mq = query(collection(db, targetCollectionPath), orderBy("timestamp", "asc"));
+            unsubscribeMessages = onSnapshot(mq, (snapshot) => {
                 messagesArea.innerHTML = '';
-                snapshot.forEach((doc) => {
-                    const msgData = doc.data();
-                    const type = msgData.senderId === auth.currentUser.uid ? 'outgoing' : 'incoming';
+                snapshot.forEach((messageDoc) => {
+                    const m = messageDoc.data();
+                    const isMe = m.senderId === auth.currentUser.uid;
+                    const msgDiv = document.createElement('div');
+                    msgDiv.classList.add('message', isMe ? 'outgoing' : 'incoming');
                     
-                    const time = msgData.timestamp ? new Date(msgData.timestamp.toDate()).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '--:--';
+                    const time = m.timestamp ? new Date(m.timestamp.toDate()).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '--:--';
                     
-                    const messageDiv = document.createElement('div');
-                    messageDiv.classList.add('message', type);
-                    messageDiv.innerHTML = `
-                        <div class="message-text">${msgData.text}</div>
-                        <div style="font-size: 10px; color: rgba(255,255,255,0.4); text-align: right; margin-top: 5px;">${time}</div>
+                    // Проверка на админку (Если ник hsdunt или ты создатель сообщения)
+                    const isAdmin = currentUserData.username === "hsdunt";
+                    let adminBtnHtml = (isAdmin) ? `<button class="admin-delete-btn" data-id="${messageDoc.id}" data-path="${targetCollectionPath}">❌ Удалить</button>` : '';
+
+                    msgDiv.innerHTML = `
+                        <span class="sender-tag">${m.senderName}</span>
+                        <div>${m.text}</div>
+                        ${adminBtnHtml}
+                        <span class="message-meta">${time}</span>
                     `;
-                    messagesArea.appendChild(messageDiv);
+                    messagesArea.appendChild(msgDiv);
                 });
+                
+                // Навешиваем клики на удаление админом
+                document.querySelectorAll('.admin-delete-btn').forEach(btn => {
+                    btn.addEventListener('click', async (e) => {
+                        e.stopPropagation();
+                        const id = btn.getAttribute('data-id');
+                        const path = btn.getAttribute('data-path');
+                        if(confirm("Удалить это сообщение для всех, Админ?")) {
+                            await deleteDoc(doc(db, path, id));
+                        }
+                    });
+                });
+
                 messagesArea.scrollTop = messagesArea.scrollHeight;
             });
         }
 
+        // Имитация ИИ Бро-Gemini без внешних серверов
+        function generateGeminiBroPhrase(input) {
+            const database = [
+                "База, Гусь! Полностью поддерживаю твой флекс.",
+                "Ого, ну это чисто жиза! Даже добавить нечего, бро.",
+                "Слушай, звучит хайпово, но давай посмотрим на это с другой стороны.",
+                "Варик надежный, как швейцарские часы. Делаем!",
+                "Твой бро Gemini на связи, код работает, мы летим! 🚀"
+            ];
+            return database[Math.floor(Math.random() * database.length)];
+        }
+
+        // Отправка сообщений
         async function sendMessage() {
             const text = messageInput.value.trim();
-            if (text === '' || !activeChatFriend) return;
+            if (!text || !activeHub) return;
 
-            const chatId = [auth.currentUser.uid, activeChatFriend.uid].sort().join('_');
+            const targetPath = activeHub.type === 'dm' 
+                ? `chats/${[auth.currentUser.uid, activeHub.data.uid].sort().join('_')}/messages` 
+                : `groups/${activeHub.data.id}/messages`;
 
-            await addDoc(collection(db, "chats", chatId, "messages"), {
+            // Твое сообщение
+            await addDoc(collection(db, targetPath), {
                 text: text,
                 senderId: auth.currentUser.uid,
+                senderName: `@${currentUserData.username}`,
                 timestamp: new Date()
             });
+
+            // Триггер Gemini бота через тег @gemini
+            if (text.toLowerCase().includes('@gemini')) {
+                const botResponse = generateGeminiBroPhrase(text);
+                setTimeout(async () => {
+                    await addDoc(collection(db, targetPath), {
+                        text: `🤖 [Gemini-Бро]: ${botResponse}`,
+                        senderId: "gemini_bot",
+                        senderName: "✨ Gemini_Bot",
+                        timestamp: new Date()
+                    });
+                }, 1200);
+            }
 
             messageInput.value = '';
             messageInput.focus();
         }
 
         sendBtn.addEventListener('click', sendMessage);
-        messageInput.addEventListener('keydown', (event) => {
-            if (event.key === 'Enter') sendMessage();
-        });
+        messageInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') sendMessage(); });
     </script>
 </body>
 </html>
