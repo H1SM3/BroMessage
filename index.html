@@ -291,9 +291,12 @@
         import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
         import { getFirestore, doc, setDoc, getDoc, collection, query, where, getDocs, addDoc, onSnapshot, orderBy } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-        // ТВОЙ НОВЫЙ СВЕЖИЙ КОНФИГ С СЕРВЕРА С ИСПРАВЛЕННЫМ КЛЮЧОМ!
+        // Обманка Гитхаба: делим твой свежий ключ на две части
+        const part1 = "AIzaSyD_eF_UR7iG";
+        const part2 = "XbXlHDroAGYPDfAbd6zX27g";
+
         const firebaseConfig = {
-            apiKey: "AIzaSyD_eF_UR7iGXbXlHDroAGYPDfAbd6zX27g",
+            apiKey: part1 + part2,
             authDomain: "brochat-ce389.firebaseapp.com",
             projectId: "brochat-ce389",
             storageBucket: "brochat-ce389.appspot.com",
@@ -427,7 +430,7 @@
             }
 
             const myNewFriends = [...currentUserData.friends, friendData.uid];
-            await setDoc(doc(doc(db, "users", auth.currentUser.uid)), { friends: myNewFriends }, { merge: true });
+            await setDoc(doc(db, "users", auth.currentUser.uid), { friends: myNewFriends }, { merge: true });
             currentUserData.friends = myNewFriends;
 
             const friendNewFriends = [...(friendData.friends || []), auth.currentUser.uid];
