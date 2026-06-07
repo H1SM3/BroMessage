@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BroChat - Авторизация</title>
+    <title>BroChat - Liquid Glass Realtime</title>
     <style>
         * {
             margin: 0;
@@ -13,218 +13,290 @@
         }
 
         body {
-            background-color: #1a1a24;
+            background: #0f0f1a;
             color: #ffffff;
             display: flex;
             justify-content: center;
             align-items: center;
             height: 100vh;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Анимированные сферы под стеклом */
+        body::before, body::after {
+            content: '';
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(80px);
+            z-index: 1;
+            animation: float 12s infinite alternate ease-in-out;
+        }
+        body::before {
+            width: 400px;
+            height: 400px;
+            background: linear-gradient(45deg, #7289da, #ff007f);
+            top: -10%;
+            left: 10%;
+        }
+        body::after {
+            width: 500px;
+            height: 500px;
+            background: linear-gradient(45deg, #00f2fe, #4facfe);
+            bottom: -10%;
+            right: 10%;
+            animation-duration: 16s;
+        }
+        @keyframes float {
+            0% { transform: translate(0, 0) scale(1); }
+            100% { transform: translate(80px, 50px) scale(1.2); }
+        }
+
+        /* Стиль Жидкого Стекла */
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 24px;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+            z-index: 10;
         }
 
         /* Окно авторизации */
         .auth-container {
             width: 400px;
-            background-color: #242533;
-            padding: 30px;
-            border-radius: 16px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            padding: 40px 30px;
             text-align: center;
         }
-
         .auth-container h2 {
-            color: #7289da;
-            margin-bottom: 20px;
+            color: #fff;
+            margin-bottom: 25px;
+            text-shadow: 0 0 10px rgba(114, 137, 218, 0.5);
         }
-
         .auth-input {
             width: 100%;
-            background-color: #2f3146;
-            border: none;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
             outline: none;
-            padding: 12px 16px;
-            border-radius: 8px;
+            padding: 14px 16px;
+            border-radius: 12px;
             color: #fff;
             font-size: 15px;
             margin-bottom: 15px;
+            transition: 0.3s;
         }
-
+        .auth-input:focus {
+            border-color: #7289da;
+            box-shadow: 0 0 15px rgba(114, 137, 218, 0.3);
+        }
         .auth-btn {
             width: 100%;
-            background-color: #7289da;
+            background: linear-gradient(135deg, #7289da, #5b73c7);
             border: none;
             color: white;
-            padding: 12px;
-            border-radius: 8px;
+            padding: 14px;
+            border-radius: 12px;
             cursor: pointer;
             font-weight: bold;
             font-size: 16px;
-            transition: background 0.2s;
-            margin-bottom: 10px;
+            box-shadow: 0 4px 15px rgba(114, 137, 218, 0.4);
+            transition: 0.3s;
+            margin-bottom: 15px;
         }
+        .auth-btn:hover { transform: translateY(-2px); }
+        .toggle-auth { font-size: 13px; color: #00f2fe; cursor: pointer; }
 
-        .auth-btn:hover {
-            background-color: #5b73c7;
-        }
-
-        .toggle-auth {
-            font-size: 14px;
-            color: #43b581;
-            cursor: pointer;
-            text-decoration: underline;
-        }
-
-        /* Главный контейнер мессенджера (скрыт по дефолту) */
+        /* Контейнер мессенджера */
         .messenger-container {
             display: none;
-            width: 900px;
-            height: 600px;
-            background-color: #242533;
-            border-radius: 16px;
+            width: 1000px;
+            height: 650px;
             overflow: hidden;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
         }
-
         .sidebar {
-            width: 30%;
-            background-color: #1e1f2b;
-            border-right: 1px solid #2d2f44;
+            width: 35%;
+            border-right: 1px solid rgba(255, 255, 255, 0.08);
             display: flex;
             flex-direction: column;
+            background: rgba(0, 0, 0, 0.1);
         }
-
         .sidebar-header {
             padding: 20px;
-            font-size: 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .user-profile {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .my-nickname {
             font-weight: bold;
-            border-bottom: 1px solid #2d2f44;
-            color: #7289da;
+            color: #00f2fe;
+            text-shadow: 0 0 10px rgba(0, 242, 254, 0.3);
+        }
+        .logout-btn {
+            font-size: 11px;
+            background: rgba(255, 0, 0, 0.2);
+            border: 1px solid rgba(255, 0, 0, 0.4);
+            padding: 4px 8px;
+            border-radius: 6px;
+            color: #ff4f4f;
+            cursor: pointer;
+        }
+        
+        /* Кнопка добавления друга */
+        .add-friend-box {
+            display: flex;
+            gap: 8px;
+        }
+        .friend-input {
+            flex: 1;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            padding: 8px 12px;
+            border-radius: 8px;
+            color: white;
+            font-size: 13px;
+        }
+        .add-friend-btn {
+            background: #43b581;
+            border: none;
+            color: white;
+            padding: 0 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 13px;
         }
 
         .chat-list { flex: 1; overflow-y: auto; }
-
         .chat-item {
             display: flex;
             align-items: center;
             padding: 15px;
             cursor: pointer;
-            transition: background 0.2s;
+            transition: 0.2s;
         }
-
-        .chat-item:hover { background-color: #2d2f44; }
-
+        .chat-item:hover { background: rgba(255, 255, 255, 0.05); }
+        .chat-item.active { background: rgba(114, 137, 218, 0.15); border-left: 3px solid #7289da; }
         .avatar {
             width: 40px;
             height: 40px;
             border-radius: 50%;
-            background: linear-gradient(45deg, #7289da, #43b581);
+            background: linear-gradient(45deg, #00f2fe, #4facfe);
             margin-right: 12px;
         }
 
-        .chat-window { width: 70%; display: flex; flex-direction: column; }
-
+        .chat-window { width: 65%; display: flex; flex-direction: column; }
         .chat-header {
-            padding: 20px;
-            background-color: #242533;
-            border-bottom: 1px solid #2d2f44;
+            padding: 22px 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
             font-weight: 600;
+            background: rgba(255, 255, 255, 0.01);
         }
-
         .messages-area {
             flex: 1;
             padding: 20px;
             overflow-y: auto;
             display: flex;
             flex-direction: column;
-            gap: 12px;
+            gap: 14px;
         }
-
         .message {
-            max-width: 70%;
-            padding: 10px 14px;
-            border-radius: 12px;
+            max-width: 65%;
+            padding: 12px 16px;
+            border-radius: 16px;
             font-size: 15px;
             line-height: 1.4;
             word-wrap: break-word;
         }
-
-        .message.incoming { background-color: #2f3146; align-self: flex-start; border-bottom-left-radius: 4px; }
-        .message.outgoing { background-color: #7289da; align-self: flex-end; border-bottom-right-radius: 4px; }
-
-        .input-area {
-            padding: 20px;
-            background-color: #242533;
-            display: flex;
-            gap: 10px;
+        .message.incoming {
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            align-self: flex-start;
+            border-bottom-left-radius: 4px;
         }
-
+        .message.outgoing {
+            background: linear-gradient(135deg, rgba(114, 137, 218, 0.3), rgba(91, 115, 199, 0.4));
+            border: 1px solid rgba(114, 137, 218, 0.3);
+            align-self: flex-end;
+            border-bottom-right-radius: 4px;
+        }
+        .input-area { padding: 20px; display: flex; gap: 12px; background: rgba(0, 0, 0, 0.1); }
         .message-input {
             flex: 1;
-            background-color: #2f3146;
-            border: none;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
             outline: none;
-            padding: 12px 16px;
-            border-radius: 8px;
+            padding: 14px 18px;
+            border-radius: 14px;
             color: #fff;
-            font-size: 15px;
         }
-
         .send-btn {
-            background-color: #7289da;
+            background: linear-gradient(135deg, #7289da, #5b73c7);
             border: none;
             color: white;
-            padding: 0 20px;
-            border-radius: 8px;
+            padding: 0 24px;
+            border-radius: 14px;
             cursor: pointer;
             font-weight: bold;
-            transition: background 0.2s;
         }
-
-        .send-btn:hover { background-color: #5b73c7; }
     </style>
 </head>
 <body>
 
-    <div class="auth-container" id="authBox">
+    <!-- Окно авторизации -->
+    <div class="auth-container glass-panel" id="authBox">
         <h2 id="authTitle">Войти в BroChat</h2>
-        <input type="email" class="auth-input" id="authEmail" placeholder="Bro, введи Email">
+        <!-- Скрытое по умолчанию поле для Никнейма (показывается только при Регистрации) -->
+        <input type="text" class="auth-input" id="authUsername" placeholder="Придумай Никнейм" style="display: none;">
+        <input type="email" class="auth-input" id="authEmail" placeholder="Твой Email">
         <input type="password" class="auth-input" id="authPassword" placeholder="Пароль">
         <button class="auth-btn" id="authBtn">Войти</button>
         <div class="toggle-auth" id="toggleAuth">Нет аккаунта? Зарегистрироваться</div>
     </div>
 
-    <div class="messenger-container" id="messengerBox">
+    <!-- Главный мессенджер -->
+    <div class="messenger-container glass-panel" id="messengerBox">
         <div class="sidebar">
-            <div class="sidebar-header">BroChat 💬</div>
-            <div class="chat-list">
-                <div class="chat-item">
-                    <div class="avatar"></div>
-                    <div class="chat-info">
-                        <strong>Главный Гусь</strong>
-                    </div>
+            <div class="sidebar-header">
+                <div class="user-profile">
+                    <span class="my-nickname" id="myNickname">Загрузка...</span>
+                    <button class="logout-btn" id="logoutBtn">Выйти</button>
                 </div>
+                <!-- Инпут для добавления друга -->
+                <div class="add-friend-box">
+                    <input type="text" class="friend-input" id="friendSearchInput" placeholder="Введите никнейм друга">
+                    <button class="add-friend-btn" id="addFriendBtn">+</button>
+                </div>
+            </div>
+            <!-- Список друзей -->
+            <div class="chat-list" id="chatList">
+                <!-- Сюда будут динамически добавляться твои друзья из базы -->
             </div>
         </div>
 
         <div class="chat-window">
-            <div class="chat-header">Братский Чат</div>
-            <div class="messages-area" id="messagesArea">
-                <div class="message incoming">
-                    <div class="message-text">Привет! Успешно авторизовался, Бро! 😎</div>
-                </div>
-            </div>
+            <div class="chat-header" id="chatHeaderTitle">Выберите чат из списка слева</div>
+            <div class="messages-area" id="messagesArea"></div>
 
             <div class="input-area">
-                <input type="text" class="message-input" id="messageInput" placeholder="Напиши что-нибудь...">
-                <button class="send-btn" id="sendBtn">Отправить</button>
+                <input type="text" class="message-input" id="messageInput" placeholder="Напиши что-нибудь..." disabled>
+                <button class="send-btn" id="sendBtn" disabled>Отправить</button>
             </div>
         </div>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        // Импортируем модули базы данных Firestore
+        import { getFirestore, doc, setDoc, getDoc, collection, query, where, getDocs, addDoc, onSnapshot, orderBy } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-        // Твой исправленный конфиг (буква é изменена обратно на обычную e)
         const firebaseConfig = {
             apiKey: "AIzaSyD_eF_UR7lGXbXlHdroAGYPDfAbdexZ27g",
             authDomain: "brochat-ce389.firebaseapp.com",
@@ -234,103 +306,239 @@
             appId: "1:856173025113:web:c3910728e5195a62db5e48"
         };
 
-        // Запуск Firebase
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
+        const db = getFirestore(app); // Подключаем базу!
 
+        // DOM элементы
         const authBox = document.getElementById('authBox');
         const messengerBox = document.getElementById('messengerBox');
         const authTitle = document.getElementById('authTitle');
         const authBtn = document.getElementById('authBtn');
         const toggleAuth = document.getElementById('toggleAuth');
-        
+        const usernameInput = document.getElementById('authUsername');
         const emailInput = document.getElementById('authEmail');
         const passwordInput = document.getElementById('authPassword');
-
-        const sendBtn = document.getElementById('sendBtn');
-        const messageInput = document.getElementById('messageInput');
+        const myNicknameDisplay = document.getElementById('myNickname');
+        const logoutBtn = document.getElementById('logoutBtn');
+        const friendSearchInput = document.getElementById('friendSearchInput');
+        const addFriendBtn = document.getElementById('addFriendBtn');
+        const chatList = document.getElementById('chatList');
+        const chatHeaderTitle = document.getElementById('chatHeaderTitle');
         const messagesArea = document.getElementById('messagesArea');
+        const messageInput = document.getElementById('messageInput');
+        const sendBtn = document.getElementById('sendBtn');
 
         let isSignUp = false;
+        let currentUserData = null; 
+        let activeChatFriend = null; // Кто открыт в чате прямо сейчас
+        let unsubscribeMessages = null; // Функция для отписки от старого чата
 
+        // Переключалка Войти / Зарегистрироваться
         toggleAuth.addEventListener('click', () => {
             isSignUp = !isSignUp;
             if (isSignUp) {
                 authTitle.textContent = "Регистрация в BroChat";
                 authBtn.textContent = "Создать аккаунт";
                 toggleAuth.textContent = "Уже есть аккаунт? Войти";
+                usernameInput.style.display = 'block'; // Показываем поле никнейма
             } else {
                 authTitle.textContent = "Войти в BroChat";
                 authBtn.textContent = "Войти";
                 toggleAuth.textContent = "Нет аккаунта? Зарегистрироваться";
+                usernameInput.style.display = 'none';
             }
         });
 
+        // Следим за сессией пользователя
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                // Достаем никнейм текущего юзера из базы данных Firestore
+                const userDoc = await getDoc(doc(db, "users", user.uid));
+                if (userDoc.exists()) {
+                    currentUserData = userDoc.data();
+                    myNicknameDisplay.textContent = "@" + currentUserData.username;
+                    loadFriendsList(); // Загружаем список друзей
+                }
+                authBox.style.display = 'none';
+                messengerBox.style.display = 'flex';
+            } else {
+                authBox.style.display = 'block';
+                messengerBox.style.display = 'none';
+                chatList.innerHTML = '';
+            }
+        });
+
+        // Логика кнопки Вход / Регистрация
         authBtn.addEventListener('click', async () => {
             const email = emailInput.value.trim();
             const password = passwordInput.value.trim();
+            const username = usernameInput.value.trim().toLowerCase();
 
-            if (!email || !password) {
+            if (!email || !password || (isSignUp && !username)) {
                 alert("Бро, заполни все поля!");
                 return;
             }
 
             try {
                 if (isSignUp) {
-                    await createUserWithEmailAndPassword(auth, email, password);
-                    alert("Аккаунт успешно создан, Гусь! Вход выполнен.");
+                    // ПРОВЕРКА: Занят ли никнейм в базе
+                    const q = query(collection(db, "users"), where("username", "==", username));
+                    const querySnapshot = await getDocs(q);
+                    if (!querySnapshot.empty) {
+                        alert("Этот никнейм уже занят другим Гусем! Придумай другой.");
+                        return;
+                    }
+
+                    // Создаем юзера в Auth
+                    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+                    const user = userCredential.user;
+
+                    // Сохраняем связку uid + никнейм в базу Firestore
+                    await setDoc(doc(db, "users", user.uid), {
+                        uid: user.uid,
+                        username: username,
+                        email: email,
+                        friends: [] // пустой список друзей при создании
+                    });
+
+                    alert("Аккаунт успешно создан, Бро!");
                 } else {
                     await signInWithEmailAndPassword(auth, email, password);
                 }
-                
-                authBox.style.display = 'none';
-                messengerBox.style.display = 'flex';
-
             } catch (error) {
-                console.error(error);
-                alert("Ошибка авторизации: " + error.message);
+                alert("Косяк: " + error.message);
             }
         });
 
-        // Чат-логика
-        function getCurrentTime() {
-            const now = new Date();
-            return `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+        // Выход
+        logoutBtn.addEventListener('click', () => {
+            signOut(auth);
+        });
+
+        // ФУНКЦИЯ: ДОБАВЛЕНИЕ ДРУГА ПО НИКНЕЙМУ
+        addFriendBtn.addEventListener('click', async () => {
+            const targetUsername = friendSearchInput.value.trim().toLowerCase();
+            if (!targetUsername) return;
+            if (targetUsername === currentUserData.username) {
+                alert("Бро, ты не можешь добавить самого себя в друзья! 😂");
+                return;
+            }
+
+            // Ищем друга в базе по его никнейму
+            const q = query(collection(db, "users"), where("username", "==", targetUsername));
+            const querySnapshot = await getDocs(q);
+
+            if (querySnapshot.empty) {
+                alert("Пользователь с таким никнеймом не найден!");
+                return;
+            }
+
+            const friendDoc = querySnapshot.docs[0];
+            const friendData = friendDoc.data();
+
+            // Проверяем, нет ли его уже в друзьях
+            if (currentUserData.friends.includes(friendData.uid)) {
+                alert("Этот бро уже есть в твоем списке друзей!");
+                return;
+            }
+
+            // Обновляем список друзей у СЕБЯ в базе
+            const myNewFriends = [...currentUserData.friends, friendData.uid];
+            await setDoc(doc(db, "users", auth.currentUser.uid), { friends: myNewFriends }, { merge: true });
+            currentUserData.friends = myNewFriends;
+
+            // Обновляем список друзей у НЕГО в базе (чтобы чат появился у обоих)
+            const friendNewFriends = [...(friendData.friends || []), auth.currentUser.uid];
+            await setDoc(doc(db, "users", friendData.uid), { friends: friendNewFriends }, { merge: true });
+
+            friendSearchInput.value = '';
+            alert(`Бро @${friendData.username} успешно добавлен в друзья!`);
+            loadFriendsList();
+        });
+
+        // ФУНКЦИЯ: ЗАГРУЗКА СПИСКА ДРУЗЕЙ В БОКОВУЮ ПАНЕЛЬ
+        async function loadFriendsList() {
+            chatList.innerHTML = '';
+            if (!currentUserData.friends || currentUserData.friends.length === 0) return;
+
+            for (let friendUid of currentUserData.friends) {
+                const friendDoc = await getDoc(doc(db, "users", friendUid));
+                if (friendDoc.exists()) {
+                    const friendData = friendDoc.data();
+
+                    const item = document.createElement('div');
+                    item.classList.add('chat-item');
+                    item.innerHTML = `
+                        <div class="avatar"></div>
+                        <div class="chat-info"><strong>@${friendData.username}</strong></div>
+                    `;
+
+                    // При клике на друга — открываем чат с ним
+                    item.addEventListener('click', () => {
+                        document.querySelectorAll('.chat-item').forEach(el => el.classList.remove('active'));
+                        item.classList.add('active');
+                        openChatWith(friendData);
+                    });
+
+                    chatList.appendChild(item);
+                }
+            }
         }
 
-        function createMessageElement(text, type) {
-            const messageDiv = document.createElement('div');
-            messageDiv.classList.add('message', type);
-            messageDiv.innerHTML = `
-                <div class="message-text">${text}</div>
-                <div style="font-size: 11px; color: rgba(255,255,255,0.5); text-align: right; margin-top: 4px;">${getCurrentTime()}</div>
-            `;
-            return messageDiv;
-        }
+        // ФУНКЦИЯ: ОТКРЫТИЕ ЧАТА И ЗАГРУЗКА СООБЩЕНИЙ В РЕАЛЬНОМ ВРЕМЕНИ
+        function openChatWith(friendData) {
+            activeChatFriend = friendData;
+            chatHeaderTitle.textContent = `Чат с @${friendData.username}`;
+            messageInput.disabled = false;
+            sendBtn.disabled = false;
+            messagesArea.innerHTML = '';
 
-        function sendMessage() {
-            const text = messageInput.value.trim();
-            if (text === '') return;
+            // Генерируем уникальный ID комнаты для двух пользователей (всегда одинаковый для этой пары)
+            const chatId = [auth.currentUser.uid, friendData.uid].sort().join('_');
 
-            const messageDiv = createMessageElement(text, 'outgoing');
-            messagesArea.appendChild(messageDiv);
+            // Если были подписаны на другой чат — отписываемся
+            if (unsubscribeMessages) unsubscribeMessages();
+
+            // Слушаем новые сообщения из этой комнаты в реальном времени!
+            const messagesQuery = query(collection(db, "chats", chatId, "messages"), orderBy("timestamp", "asc"));
             
+            unsubscribeMessages = onSnapshot(messagesQuery, (snapshot) => {
+                messagesArea.innerHTML = '';
+                snapshot.forEach((doc) => {
+                    const msgData = doc.data();
+                    const type = msgData.senderId === auth.currentUser.uid ? 'outgoing' : 'incoming';
+                    
+                    const time = msgData.timestamp ? new Date(msgData.timestamp.toDate()).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '--:--';
+                    
+                    const messageDiv = document.createElement('div');
+                    messageDiv.classList.add('message', type);
+                    messageDiv.innerHTML = `
+                        <div class="message-text">${msgData.text}</div>
+                        <div style="font-size: 10px; color: rgba(255,255,255,0.4); text-align: right; margin-top: 5px;">${time}</div>
+                    `;
+                    messagesArea.appendChild(messageDiv);
+                });
+                messagesArea.scrollTop = messagesArea.scrollHeight;
+            });
+        }
+
+        // ФУНКЦИЯ: ОТПРАВКА СООБЩЕНИЯ В БАЗУ ДАННЫХ
+        async function sendMessage() {
+            const text = messageInput.value.trim();
+            if (text === '' || !activeChatFriend) return;
+
+            const chatId = [auth.currentUser.uid, activeChatFriend.uid].sort().join('_');
+
+            // Закидываем сообщение в подколлекцию комнаты
+            await addDoc(collection(db, "chats", chatId, "messages"), {
+                text: text,
+                senderId: auth.currentUser.uid,
+                timestamp: new Date() // серверное время Firebase
+            });
+
             messageInput.value = '';
             messageInput.focus();
-            messagesArea.scrollTop = messagesArea.scrollHeight;
-
-            const typingIndicator = document.createElement('div');
-            typingIndicator.style.cssText = "color: #7289da; font-size: 14px; font-style: italic; align-self: flex-start; margin-left: 5px;";
-            typingIndicator.textContent = "Главный Гусь печатает...";
-            messagesArea.appendChild(typingIndicator);
-            messagesArea.scrollTop = messagesArea.scrollHeight;
-
-            setTimeout(() => {
-                typingIndicator.remove();
-                const replyDiv = createMessageElement(`Гусь, я принял твое сообщение: "${text}"!`, 'incoming');
-                messagesArea.appendChild(replyDiv);
-                messagesArea.scrollTop = messagesArea.scrollHeight;
-            }, 1500);
         }
 
         sendBtn.addEventListener('click', sendMessage);
@@ -340,3 +548,4 @@
     </script>
 </body>
 </html>
+            
