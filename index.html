@@ -252,7 +252,6 @@
     <!-- Окно авторизации -->
     <div class="auth-container glass-panel" id="authBox">
         <h2 id="authTitle">Войти в BroChat</h2>
-        <!-- Скрытое по умолчанию поле для Никнейма (показывается только при Регистрации) -->
         <input type="text" class="auth-input" id="authUsername" placeholder="Придумай Никнейм" style="display: none;">
         <input type="email" class="auth-input" id="authEmail" placeholder="Твой Email">
         <input type="password" class="auth-input" id="authPassword" placeholder="Пароль">
@@ -268,16 +267,12 @@
                     <span class="my-nickname" id="myNickname">Загрузка...</span>
                     <button class="logout-btn" id="logoutBtn">Выйти</button>
                 </div>
-                <!-- Инпут для добавления друга -->
                 <div class="add-friend-box">
                     <input type="text" class="friend-input" id="friendSearchInput" placeholder="Введите никнейм друга">
                     <button class="add-friend-btn" id="addFriendBtn">+</button>
                 </div>
             </div>
-            <!-- Список друзей -->
-            <div class="chat-list" id="chatList">
-                <!-- Сюда будут динамически добавляться твои друзья из базы -->
-            </div>
+            <div class="chat-list" id="chatList"></div>
         </div>
 
         <div class="chat-window">
@@ -294,11 +289,11 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        // Импортируем модули базы данных Firestore
         import { getFirestore, doc, setDoc, getDoc, collection, query, where, getDocs, addDoc, onSnapshot, orderBy } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
+        // ТВОЙ НОВЫЙ СВЕЖИЙ КОНФИГ С СЕРВЕРА С ИСПРАВЛЕННЫМ КЛЮЧОМ!
         const firebaseConfig = {
-            apiKey: "AIzaSyD_eF_UR7lGXbXlHdroAGYPDfAbdexZ27g",
+            apiKey: "AIzaSyD_eF_UR7iGXbXlHDroAGYPDfAbd6zX27g",
             authDomain: "brochat-ce389.firebaseapp.com",
             projectId: "brochat-ce389",
             storageBucket: "brochat-ce389.appspot.com",
@@ -308,9 +303,8 @@
 
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
-        const db = getFirestore(app); // Подключаем базу!
+        const db = getFirestore(app);
 
-        // DOM элементы
         const authBox = document.getElementById('authBox');
         const messengerBox = document.getElementById('messengerBox');
         const authTitle = document.getElementById('authTitle');
@@ -331,17 +325,16 @@
 
         let isSignUp = false;
         let currentUserData = null; 
-        let activeChatFriend = null; // Кто открыт в чате прямо сейчас
-        let unsubscribeMessages = null; // Функция для отписки от старого чата
+        let activeChatFriend = null; 
+        let unsubscribeMessages = null; 
 
-        // Переключалка Войти / Зарегистрироваться
         toggleAuth.addEventListener('click', () => {
             isSignUp = !isSignUp;
             if (isSignUp) {
                 authTitle.textContent = "Регистрация в BroChat";
                 authBtn.textContent = "Создать аккаунт";
                 toggleAuth.textContent = "Уже есть аккаунт? Войти";
-                usernameInput.style.display = 'block'; // Показываем поле никнейма
+                usernameInput.style.display = 'block'; 
             } else {
                 authTitle.textContent = "Войти в BroChat";
                 authBtn.textContent = "Войти";
@@ -350,15 +343,13 @@
             }
         });
 
-        // Следим за сессией пользователя
         onAuthStateChanged(auth, async (user) => {
             if (user) {
-                // Достаем никнейм текущего юзера из базы данных Firestore
                 const userDoc = await getDoc(doc(db, "users", user.uid));
                 if (userDoc.exists()) {
                     currentUserData = userDoc.data();
                     myNicknameDisplay.textContent = "@" + currentUserData.username;
-                    loadFriendsList(); // Загружаем список друзей
+                    loadFriendsList(); 
                 }
                 authBox.style.display = 'none';
                 messengerBox.style.display = 'flex';
@@ -369,7 +360,6 @@
             }
         });
 
-        // Логика кнопки Вход / Регистрация
         authBtn.addEventListener('click', async () => {
             const email = emailInput.value.trim();
             const password = passwordInput.value.trim();
@@ -382,7 +372,6 @@
 
             try {
                 if (isSignUp) {
-                    // ПРОВЕРКА: Занят ли никнейм в базе
                     const q = query(collection(db, "users"), where("username", "==", username));
                     const querySnapshot = await getDocs(q);
                     if (!querySnapshot.empty) {
@@ -390,16 +379,14 @@
                         return;
                     }
 
-                    // Создаем юзера в Auth
                     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
                     const user = userCredential.user;
 
-                    // Сохраняем связку uid + никнейм в базу Firestore
                     await setDoc(doc(db, "users", user.uid), {
                         uid: user.uid,
                         username: username,
                         email: email,
-                        friends: [] // пустой список друзей при создании
+                        friends: [] 
                     });
 
                     alert("Аккаунт успешно создан, Бро!");
@@ -411,12 +398,10 @@
             }
         });
 
-        // Выход
         logoutBtn.addEventListener('click', () => {
             signOut(auth);
         });
 
-        // ФУНКЦИЯ: ДОБАВЛЕНИЕ ДРУГА ПО НИКНЕЙМУ
         addFriendBtn.addEventListener('click', async () => {
             const targetUsername = friendSearchInput.value.trim().toLowerCase();
             if (!targetUsername) return;
@@ -425,7 +410,6 @@
                 return;
             }
 
-            // Ищем друга в базе по его никнейму
             const q = query(collection(db, "users"), where("username", "==", targetUsername));
             const querySnapshot = await getDocs(q);
 
@@ -437,18 +421,15 @@
             const friendDoc = querySnapshot.docs[0];
             const friendData = friendDoc.data();
 
-            // Проверяем, нет ли его уже в друзьях
             if (currentUserData.friends.includes(friendData.uid)) {
                 alert("Этот бро уже есть в твоем списке друзей!");
                 return;
             }
 
-            // Обновляем список друзей у СЕБЯ в базе
             const myNewFriends = [...currentUserData.friends, friendData.uid];
-            await setDoc(doc(db, "users", auth.currentUser.uid), { friends: myNewFriends }, { merge: true });
+            await setDoc(doc(doc(db, "users", auth.currentUser.uid)), { friends: myNewFriends }, { merge: true });
             currentUserData.friends = myNewFriends;
 
-            // Обновляем список друзей у НЕГО в базе (чтобы чат появился у обоих)
             const friendNewFriends = [...(friendData.friends || []), auth.currentUser.uid];
             await setDoc(doc(db, "users", friendData.uid), { friends: friendNewFriends }, { merge: true });
 
@@ -457,7 +438,6 @@
             loadFriendsList();
         });
 
-        // ФУНКЦИЯ: ЗАГРУЗКА СПИСКА ДРУЗЕЙ В БОКОВУЮ ПАНЕЛЬ
         async function loadFriendsList() {
             chatList.innerHTML = '';
             if (!currentUserData.friends || currentUserData.friends.length === 0) return;
@@ -474,7 +454,6 @@
                         <div class="chat-info"><strong>@${friendData.username}</strong></div>
                     `;
 
-                    // При клике на друга — открываем чат с ним
                     item.addEventListener('click', () => {
                         document.querySelectorAll('.chat-item').forEach(el => el.classList.remove('active'));
                         item.classList.add('active');
@@ -486,7 +465,6 @@
             }
         }
 
-        // ФУНКЦИЯ: ОТКРЫТИЕ ЧАТА И ЗАГРУЗКА СООБЩЕНИЙ В РЕАЛЬНОМ ВРЕМЕНИ
         function openChatWith(friendData) {
             activeChatFriend = friendData;
             chatHeaderTitle.textContent = `Чат с @${friendData.username}`;
@@ -494,13 +472,10 @@
             sendBtn.disabled = false;
             messagesArea.innerHTML = '';
 
-            // Генерируем уникальный ID комнаты для двух пользователей (всегда одинаковый для этой пары)
             const chatId = [auth.currentUser.uid, friendData.uid].sort().join('_');
 
-            // Если были подписаны на другой чат — отписываемся
             if (unsubscribeMessages) unsubscribeMessages();
 
-            // Слушаем новые сообщения из этой комнаты в реальном времени!
             const messagesQuery = query(collection(db, "chats", chatId, "messages"), orderBy("timestamp", "asc"));
             
             unsubscribeMessages = onSnapshot(messagesQuery, (snapshot) => {
@@ -523,18 +498,16 @@
             });
         }
 
-        // ФУНКЦИЯ: ОТПРАВКА СООБЩЕНИЯ В БАЗУ ДАННЫХ
         async function sendMessage() {
             const text = messageInput.value.trim();
             if (text === '' || !activeChatFriend) return;
 
             const chatId = [auth.currentUser.uid, activeChatFriend.uid].sort().join('_');
 
-            // Закидываем сообщение в подколлекцию комнаты
             await addDoc(collection(db, "chats", chatId, "messages"), {
                 text: text,
                 senderId: auth.currentUser.uid,
-                timestamp: new Date() // серверное время Firebase
+                timestamp: new Date()
             });
 
             messageInput.value = '';
@@ -548,4 +521,3 @@
     </script>
 </body>
 </html>
-            
