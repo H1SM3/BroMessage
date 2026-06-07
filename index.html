@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BroChat</title>
+    <title>BroChat - Авторизация</title>
     <style>
         * {
             margin: 0;
@@ -21,9 +21,61 @@
             height: 100vh;
         }
 
-        /* Главный контейнер мессенджера */
+        /* Окно авторизации */
+        .auth-container {
+            width: 400px;
+            background-color: #242533;
+            padding: 30px;
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            text-align: center;
+        }
+
+        .auth-container h2 {
+            color: #7289da;
+            margin-bottom: 20px;
+        }
+
+        .auth-input {
+            width: 100%;
+            background-color: #2f3146;
+            border: none;
+            outline: none;
+            padding: 12px 16px;
+            border-radius: 8px;
+            color: #fff;
+            font-size: 15px;
+            margin-bottom: 15px;
+        }
+
+        .auth-btn {
+            width: 100%;
+            background-color: #7289da;
+            border: none;
+            color: white;
+            padding: 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 16px;
+            transition: background 0.2s;
+            margin-bottom: 10px;
+        }
+
+        .auth-btn:hover {
+            background-color: #5b73c7;
+        }
+
+        .toggle-auth {
+            font-size: 14px;
+            color: #43b581;
+            cursor: pointer;
+            text-decoration: underline;
+        }
+
+        /* Главный контейнер мессенджера (скрыт по дефолту) */
         .messenger-container {
-            display: flex;
+            display: none;
             width: 900px;
             height: 600px;
             background-color: #242533;
@@ -32,7 +84,6 @@
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
         }
 
-        /* Левая панель - список чатов */
         .sidebar {
             width: 30%;
             background-color: #1e1f2b;
@@ -49,10 +100,7 @@
             color: #7289da;
         }
 
-        .chat-list {
-            flex: 1;
-            overflow-y: auto;
-        }
+        .chat-list { flex: 1; overflow-y: auto; }
 
         .chat-item {
             display: flex;
@@ -62,9 +110,7 @@
             transition: background 0.2s;
         }
 
-        .chat-item:hover {
-            background-color: #2d2f44;
-        }
+        .chat-item:hover { background-color: #2d2f44; }
 
         .avatar {
             width: 40px;
@@ -74,12 +120,7 @@
             margin-right: 12px;
         }
 
-        /* Правая часть - окно чата */
-        .chat-window {
-            width: 70%;
-            display: flex;
-            flex-direction: column;
-        }
+        .chat-window { width: 70%; display: flex; flex-direction: column; }
 
         .chat-header {
             padding: 20px;
@@ -97,7 +138,6 @@
             gap: 12px;
         }
 
-        /* Стили сообщений */
         .message {
             max-width: 70%;
             padding: 10px 14px;
@@ -107,19 +147,9 @@
             word-wrap: break-word;
         }
 
-        .message.incoming {
-            background-color: #2f3146;
-            align-self: flex-start;
-            border-bottom-left-radius: 4px;
-        }
+        .message.incoming { background-color: #2f3146; align-self: flex-start; border-bottom-left-radius: 4px; }
+        .message.outgoing { background-color: #7289da; align-self: flex-end; border-bottom-right-radius: 4px; }
 
-        .message.outgoing {
-            background-color: #7289da;
-            align-self: flex-end;
-            border-bottom-right-radius: 4px;
-        }
-
-        /* Поле ввода */
         .input-area {
             padding: 20px;
             background-color: #242533;
@@ -149,15 +179,20 @@
             transition: background 0.2s;
         }
 
-        .send-btn:hover {
-            background-color: #5b73c7;
-        }
+        .send-btn:hover { background-color: #5b73c7; }
     </style>
 </head>
 <body>
 
-    <div class="messenger-container">
-        <!-- Боковое меню -->
+    <div class="auth-container" id="authBox">
+        <h2 id="authTitle">Войти в BroChat</h2>
+        <input type="email" class="auth-input" id="authEmail" placeholder="Bro, введи Email">
+        <input type="password" class="auth-input" id="authPassword" placeholder="Пароль">
+        <button class="auth-btn" id="authBtn">Войти</button>
+        <div class="toggle-auth" id="toggleAuth">Нет аккаунта? Зарегистрироваться</div>
+    </div>
+
+    <div class="messenger-container" id="messengerBox">
         <div class="sidebar">
             <div class="sidebar-header">BroChat 💬</div>
             <div class="chat-list">
@@ -170,47 +205,102 @@
             </div>
         </div>
 
-        <!-- Окно чата -->
         <div class="chat-window">
             <div class="chat-header">Братский Чат</div>
-            
-            <div class="messages-area">
+            <div class="messages-area" id="messagesArea">
                 <div class="message incoming">
-                    <div class="message-text">Привет! Ну что, пишем свой мессенджер? 😎</div>
-                    <div style="font-size: 11px; color: rgba(255,255,255,0.5); text-align: right; margin-top: 4px;">20:44</div>
-                </div>
-                <div class="message outgoing">
-                    <div class="message-text">Да, бро, интерфейс уже готов! На стиле.</div>
-                    <div style="font-size: 11px; color: rgba(255,255,255,0.5); text-align: right; margin-top: 4px;">20:45</div>
+                    <div class="message-text">Привет! Успешно авторизовался, Бро! 😎</div>
                 </div>
             </div>
 
             <div class="input-area">
-                <input type="text" class="message-input" placeholder="Напиши что-нибудь...">
-                <button class="send-btn">Отправить</button>
+                <input type="text" class="message-input" id="messageInput" placeholder="Напиши что-нибудь...">
+                <button class="send-btn" id="sendBtn">Отправить</button>
             </div>
         </div>
     </div>
 
-    <!-- Скрипт логики, времени и статуса печати -->
-    <script>
-        const sendBtn = document.querySelector('.send-btn');
-        const messageInput = document.querySelector('.message-input');
-        const messagesArea = document.querySelector('.messages-area');
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
-        // Получение текущего времени в формате ЧЧ:ММ
+        // Твои данные из консоли на фото:
+        const firebaseConfig = {
+            apiKey: "AIzaSyD_eF_UR7lGXbXlHdroAGYPDfAbdézX27g",
+            authDomain: "brochat-ce389.firebaseapp.com",
+            projectId: "brochat-ce389",
+            storageBucket: "brochat-ce389.appspot.com",
+            messagingSenderId: "856173025113",
+            appId: "1:856173025113:web:c3910728e5195a62db5e48"
+        };
+
+        // Запуск Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+
+        const authBox = document.getElementById('authBox');
+        const messengerBox = document.getElementById('messengerBox');
+        const authTitle = document.getElementById('authTitle');
+        const authBtn = document.getElementById('authBtn');
+        const toggleAuth = document.getElementById('toggleAuth');
+        
+        const emailInput = document.getElementById('authEmail');
+        const passwordInput = document.getElementById('authPassword');
+
+        const sendBtn = document.getElementById('sendBtn');
+        const messageInput = document.getElementById('messageInput');
+        const messagesArea = document.getElementById('messagesArea');
+
+        let isSignUp = false;
+
+        toggleAuth.addEventListener('click', () => {
+            isSignUp = !isSignUp;
+            if (isSignUp) {
+                authTitle.textContent = "Регистрация в BroChat";
+                authBtn.textContent = "Создать аккаунт";
+                toggleAuth.textContent = "Уже есть аккаунт? Войти";
+            } else {
+                authTitle.textContent = "Войти в BroChat";
+                authBtn.textContent = "Войти";
+                toggleAuth.textContent = "Нет аккаунта? Зарегистрироваться";
+            }
+        });
+
+        authBtn.addEventListener('click', async () => {
+            const email = emailInput.value.trim();
+            const password = passwordInput.value.trim();
+
+            if (!email || !password) {
+                alert("Бро, заполни все поля!");
+                return;
+            }
+
+            try {
+                if (isSignUp) {
+                    await createUserWithEmailAndPassword(auth, email, password);
+                    alert("Аккаунт успешно создан, Гусь! Вход выполнен.");
+                } else {
+                    await signInWithEmailAndPassword(auth, email, password);
+                }
+                
+                authBox.style.display = 'none';
+                messengerBox.style.display = 'flex';
+
+            } catch (error) {
+                console.error(error);
+                alert("Ошибка авторизации: " + error.message);
+            }
+        });
+
+        // Чат-логика
         function getCurrentTime() {
             const now = new Date();
-            const hours = String(now.getHours()).padStart(2, '0');
-            const minutes = String(now.getMinutes()).padStart(2, '0');
-            return `${hours}:${minutes}`;
+            return `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
         }
 
-        // Создание элемента сообщения
         function createMessageElement(text, type) {
             const messageDiv = document.createElement('div');
             messageDiv.classList.add('message', type);
-
             messageDiv.innerHTML = `
                 <div class="message-text">${text}</div>
                 <div style="font-size: 11px; color: rgba(255,255,255,0.5); text-align: right; margin-top: 4px;">${getCurrentTime()}</div>
@@ -218,12 +308,10 @@
             return messageDiv;
         }
 
-        // Функция отправки сообщений
         function sendMessage() {
             const text = messageInput.value.trim();
             if (text === '') return;
 
-            // Добавляем твое сообщение в чат
             const messageDiv = createMessageElement(text, 'outgoing');
             messagesArea.appendChild(messageDiv);
             
@@ -231,32 +319,24 @@
             messageInput.focus();
             messagesArea.scrollTop = messagesArea.scrollHeight;
 
-            // Создаем индикатор "Гусь печатает..."
             const typingIndicator = document.createElement('div');
             typingIndicator.style.cssText = "color: #7289da; font-size: 14px; font-style: italic; align-self: flex-start; margin-left: 5px;";
             typingIndicator.textContent = "Главный Гусь печатает...";
             messagesArea.appendChild(typingIndicator);
             messagesArea.scrollTop = messagesArea.scrollHeight;
 
-            // Имитируем задержку ответа
             setTimeout(() => {
-                typingIndicator.remove(); // Удаляем надпись про печать
-
-                // Добавляем ответ бота
+                typingIndicator.remove();
                 const replyDiv = createMessageElement(`Гусь, я принял твое сообщение: "${text}"!`, 'incoming');
                 messagesArea.appendChild(replyDiv);
                 messagesArea.scrollTop = messagesArea.scrollHeight;
             }, 1500);
         }
 
-        // Слушаем кнопки
         sendBtn.addEventListener('click', sendMessage);
         messageInput.addEventListener('keydown', (event) => {
-            if (event.key === 'Enter') {
-                sendMessage();
-            }
+            if (event.key === 'Enter') sendMessage();
         });
     </script>
-
 </body>
 </html>
