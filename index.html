@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BroChat</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #1a1a24;
+            color: #ffffff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        /* Главный контейнер мессенджера */
+        .messenger-container {
+            display: flex;
+            width: 900px;
+            height: 600px;
+            background-color: #242533;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Левая панель - список чатов */
+        .sidebar {
+            width: 30%;
+            background-color: #1e1f2b;
+            border-right: 1px solid #2d2f44;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            font-size: 20px;
+            font-weight: bold;
+            border-bottom: 1px solid #2d2f44;
+            color: #7289da;
+        }
+
+        .chat-list {
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .chat-item {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .chat-item:hover {
+            background-color: #2d2f44;
+        }
+
+        .avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, #7289da, #43b581);
+            margin-right: 12px;
+        }
+
+        /* Правая часть - окно чата */
+        .chat-window {
+            width: 70%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chat-header {
+            padding: 20px;
+            background-color: #242533;
+            border-bottom: 1px solid #2d2f44;
+            font-weight: 600;
+        }
+
+        .messages-area {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        /* Стили сообщений */
+        .message {
+            max-width: 70%;
+            padding: 10px 14px;
+            border-radius: 12px;
+            font-size: 15px;
+            line-height: 1.4;
+            word-wrap: break-word;
+        }
+
+        .message.incoming {
+            background-color: #2f3146;
+            align-self: flex-start;
+            border-bottom-left-radius: 4px;
+        }
+
+        .message.outgoing {
+            background-color: #7289da;
+            align-self: flex-end;
+            border-bottom-right-radius: 4px;
+        }
+
+        /* Поле ввода */
+        .input-area {
+            padding: 20px;
+            background-color: #242533;
+            display: flex;
+            gap: 10px;
+        }
+
+        .message-input {
+            flex: 1;
+            background-color: #2f3146;
+            border: none;
+            outline: none;
+            padding: 12px 16px;
+            border-radius: 8px;
+            color: #fff;
+            font-size: 15px;
+        }
+
+        .send-btn {
+            background-color: #7289da;
+            border: none;
+            color: white;
+            padding: 0 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background 0.2s;
+        }
+
+        .send-btn:hover {
+            background-color: #5b73c7;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="messenger-container">
+        <!-- Боковое меню -->
+        <div class="sidebar">
+            <div class="sidebar-header">BroChat 💬</div>
+            <div class="chat-list">
+                <div class="chat-item">
+                    <div class="avatar"></div>
+                    <div class="chat-info">
+                        <strong>Главный Гусь</strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Окно чата -->
+        <div class="chat-window">
+            <div class="chat-header">Братский Чат</div>
+            
+            <div class="messages-area">
+                <div class="message incoming">
+                    <div class="message-text">Привет! Ну что, пишем свой мессенджер? 😎</div>
+                    <div style="font-size: 11px; color: rgba(255,255,255,0.5); text-align: right; margin-top: 4px;">20:44</div>
+                </div>
+                <div class="message outgoing">
+                    <div class="message-text">Да, бро, интерфейс уже готов! На стиле.</div>
+                    <div style="font-size: 11px; color: rgba(255,255,255,0.5); text-align: right; margin-top: 4px;">20:45</div>
+                </div>
+            </div>
+
+            <div class="input-area">
+                <input type="text" class="message-input" placeholder="Напиши что-нибудь...">
+                <button class="send-btn">Отправить</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Скрипт логики, времени и статуса печати -->
+    <script>
+        const sendBtn = document.querySelector('.send-btn');
+        const messageInput = document.querySelector('.message-input');
+        const messagesArea = document.querySelector('.messages-area');
+
+        // Получение текущего времени в формате ЧЧ:ММ
+        function getCurrentTime() {
+            const now = new Date();
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            return `${hours}:${minutes}`;
+        }
+
+        // Создание элемента сообщения
+        function createMessageElement(text, type) {
+            const messageDiv = document.createElement('div');
+            messageDiv.classList.add('message', type);
+
+            messageDiv.innerHTML = `
+                <div class="message-text">${text}</div>
+                <div style="font-size: 11px; color: rgba(255,255,255,0.5); text-align: right; margin-top: 4px;">${getCurrentTime()}</div>
+            `;
+            return messageDiv;
+        }
+
+        // Функция отправки сообщений
+        function sendMessage() {
+            const text = messageInput.value.trim();
+            if (text === '') return;
+
+            // Добавляем твое сообщение в чат
+            const messageDiv = createMessageElement(text, 'outgoing');
+            messagesArea.appendChild(messageDiv);
+            
+            messageInput.value = '';
+            messageInput.focus();
+            messagesArea.scrollTop = messagesArea.scrollHeight;
+
+            // Создаем индикатор "Гусь печатает..."
+            const typingIndicator = document.createElement('div');
+            typingIndicator.style.cssText = "color: #7289da; font-size: 14px; font-style: italic; align-self: flex-start; margin-left: 5px;";
+            typingIndicator.textContent = "Главный Гусь печатает...";
+            messagesArea.appendChild(typingIndicator);
+            messagesArea.scrollTop = messagesArea.scrollHeight;
+
+            // Имитируем задержку ответа
+            setTimeout(() => {
+                typingIndicator.remove(); // Удаляем надпись про печать
+
+                // Добавляем ответ бота
+                const replyDiv = createMessageElement(`Гусь, я принял твое сообщение: "${text}"!`, 'incoming');
+                messagesArea.appendChild(replyDiv);
+                messagesArea.scrollTop = messagesArea.scrollHeight;
+            }, 1500);
+        }
+
+        // Слушаем кнопки
+        sendBtn.addEventListener('click', sendMessage);
+        messageInput.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter') {
+                sendMessage();
+            }
+        });
+    </script>
+
+</body>
+</html>
