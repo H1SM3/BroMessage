@@ -84,6 +84,7 @@
         .auth-input:focus, .control-input:focus { border-color: var(--text-color); box-shadow: 0 0 8px rgba(255,255,255,0.1); }
         .auth-btn, .profile-save-btn { width: 100%; background: var(--text-color); border: none; color: var(--bg-body); padding: 12px; border-radius: 6px; cursor: pointer; font-weight: 700; font-size: 14px; margin-bottom: 14px; text-transform: uppercase; letter-spacing: 1px; }
         .auth-btn:hover, .profile-save-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(255,255,255,0.2); }
+        .auth-btn:disabled, .profile-save-btn:disabled { background: var(--border-color); color: var(--meta-color); cursor: not-allowed; transform: none; box-shadow: none; }
         .toggle-auth { font-size: 12px; color: var(--meta-color); cursor: pointer; text-decoration: underline; }
 
         /* Основной мессенджер */
@@ -156,6 +157,7 @@
         <button class="btn-end-call" id="endCallBtn">✖</button>
     </div>
 
+    <!-- Авторизация -->
     <div class="auth-container glass-panel" id="authBox">
         <h2 id="authTitle">BROCHAT LOGIN</h2>
         <input type="text" class="auth-input" id="authUsername" placeholder="НИКНЕЙМ" style="display: none;">
@@ -165,6 +167,7 @@
         <div class="toggle-auth" id="toggleAuth">СОЗДАТЬ АККАУНТ</div>
     </div>
 
+    <!-- Мессенджер -->
     <div class="messenger-container glass-panel" id="messengerBox">
         <div class="app-header">
             <div class="header-top">
@@ -259,35 +262,49 @@
         profileToggleBtn.addEventListener('click', () => profilePanel.style.display = profilePanel.style.display === 'flex' ? 'none' : 'flex');
         themeSwitchBtn.addEventListener('click', () => { currentTheme = currentTheme === 'dark' ? 'light' : 'dark'; document.documentElement.setAttribute('data-theme', currentTheme); });
 
-        // СОХРАНЕНИЕ ПРОФИЛЯ + ЗАГРУЗКА ИЗ ПАМЯТИ
+        // ФИКСИРОВАННОЕ СОХРАНЕНИЕ ПРОФИЛЯ — С ЗАЩИТОЙ ОТ ЗАВИСАНИЯ
         saveProfileBtn.addEventListener('click', async () => {
             if (!auth.currentUser) return;
+            
+            // Защита: отключаем кнопку, чтобы не кликать повторно
+            saveProfileBtn.disabled = true;
             saveProfileBtn.textContent = "ЗАГРУЗКА...";
             
-            let avatarUrl = currentUserData.avatarUrl || defaultAvatar;
-            const file = fileInput.files[0];
+            try {
+                let avatarUrl = currentUserData.avatarUrl || defaultAvatar;
+                const file = fileInput.files[0];
 
-            if (file) {
-                const storageRef = ref(storage, 'avatars/' + auth.currentUser.uid);
-                await uploadBytes(storageRef, file);
-                avatarUrl = await getDownloadURL(storageRef);
+                // Скрипт полезет в Storage ТОЛЬКО если файл физически выбран
+                if (file) {
+                    const storageRef = ref(storage, 'avatars/' + auth.currentUser.uid);
+                    await uploadBytes(storageRef, file);
+                    avatarUrl = await getDownloadURL(storageRef);
+                }
+
+                const newName = customNameInput.value.trim();
+                
+                // Передаем изменения в Firestore
+                await updateDoc(doc(db, "users", auth.currentUser.uid), {
+                    displayName: newName || currentUserData.username,
+                    avatarUrl: avatarUrl
+                });
+                
+                alert("Профиль успешно обновлен, Гусь!");
+                profilePanel.style.display = 'none';
+
+            } catch (error) {
+                console.error("Ошибка обновления профиля:", error);
+                alert("Бро, произошла ошибка Firebase! Проверь консоль (F12) или правила доступа (Rules).");
+            } finally {
+                // В ЛЮБОМ СЛУЧАЕ возвращаем кнопку в рабочий режим, исключая зависание
+                saveProfileBtn.disabled = false;
+                saveProfileBtn.textContent = "СОХРАНИТЬ ПРОФИЛЬ";
             }
-
-            const newName = customNameInput.value.trim();
-            await updateDoc(doc(db, "users", auth.currentUser.uid), {
-                displayName: newName || currentUserData.username,
-                avatarUrl: avatarUrl
-            });
-            
-            saveProfileBtn.textContent = "СОХРАНИТЬ ПРОФИЛЬ";
-            alert("Профиль обновлен, Гусь!");
-            profilePanel.style.display = 'none';
         });
 
         toggleAuth.addEventListener('click', () => { isSignUp = !isSignUp; authTitle.textContent = isSignUp ? "REGISTRATION" : "LOGIN"; authBtn.textContent = isSignUp ? "СОЗДАТЬ" : "ВОЙТИ"; toggleAuth.textContent = isSignUp ? "ЕСТЬ АККАУНТ? ВОЙТИ" : "СОЗДАТЬ АККАУНТ"; usernameInput.style.display = isSignUp ? 'block' : 'none'; });
         function triggerWelcomeToast(name) { toastUser.textContent = name; welcomeToast.classList.add('show'); setTimeout(() => welcomeToast.classList.remove('show'), 3000); }
 
-        // ИСПРАВЛЕННАЯ СИСТЕМА ПУШЕЙ
         async function requestNotificationPermission() {
             if (!("Notification" in window)) return;
             if (location.protocol !== 'https:' && location.hostname !== 'localhost') {
