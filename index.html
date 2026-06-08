@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>BroChat B&W Edition</title>
+    <title>BroChat Ultimate B&W</title>
     <style>
         :root {
             --bg-body: #000000;
@@ -16,7 +16,6 @@
             --msg-out-bg: #ffffff;
             --msg-out-text: #000000;
             --meta-color: #666666;
-            --accent-color: #ffffff;
         }
 
         [data-theme="light"] {
@@ -30,25 +29,26 @@
             --msg-out-bg: #000000;
             --msg-out-text: #ffffff;
             --meta-color: #888888;
-            --accent-color: #000000;
         }
 
         * { 
             margin: 0; padding: 0; box-sizing: border-box; 
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
             -webkit-tap-highlight-color: transparent;
+            transition: background 0.4s cubic-bezier(0.25, 0.8, 0.25, 1), 
+                        border-color 0.4s cubic-bezier(0.25, 0.8, 0.25, 1), 
+                        transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1),
+                        box-shadow 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
         }
         
         body { 
             background: var(--bg-body); color: var(--text-color); 
-            height: 100vh; height: -webkit-fill-available; 
-            display: flex; justify-content: center; align-items: center; 
+            height: 100vh; display: flex; justify-content: center; align-items: center; 
             overflow: hidden;
         }
 
         .glass-panel { 
-            background: var(--panel-bg); 
-            border: 1px solid var(--border-color); border-radius: 16px; 
+            background: var(--panel-bg); border: 1px solid var(--border-color); border-radius: 16px; 
             width: 100%; height: 100%; display: flex; flex-direction: column; overflow: hidden;
         }
 
@@ -57,30 +57,36 @@
             background: var(--text-color); color: var(--bg-body);
             padding: 12px 24px; border-radius: 4px; font-weight: 700; font-size: 14px;
             border: 1px solid var(--border-color); z-index: 9999;
-            transition: top 0.4s ease;
         }
-        .toast-welcome.show { top: 20px; }
+        .toast-welcome.show { top: 20px; animation: bounce 0.5s ease; }
 
-        /* Окно звонка */
+        @keyframes bounce {
+            0% { transform: translate(-50%, -20px); }
+            50% { transform: translate(-50%, 5px); }
+            100% { transform: translate(-50%, 0); }
+        }
+
+        /* Звонки */
         .call-screen {
             position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-            background: #000000; z-index: 9999;
-            display: none; flex-direction: column; justify-content: center;
-            align-items: center; gap: 20px; text-align: center;
+            background: #000000; z-index: 9999; display: none; flex-direction: column; 
+            justify-content: center; align-items: center; gap: 20px; text-align: center;
         }
         .call-avatar { width: 100px; height: 100px; border-radius: 50%; border: 2px solid #fff; filter: grayscale(100%); }
         .call-video-preview { width: 90%; max-width: 400px; height: 250px; background: #111; border-radius: 8px; object-fit: cover; display: none; border: 1px solid #fff; }
         .btn-end-call { background: #ffffff; border: none; color: #000000; width: 50px; height: 50px; border-radius: 50%; font-size: 20px; cursor: pointer; display: flex; justify-content: center; align-items: center; font-weight: bold; }
+        .btn-end-call:hover { transform: scale(1.1) rotate(90deg); }
 
         /* Вход */
-        .auth-container { width: 90vw; max-width: 360px; height: auto; padding: 30px 20px; text-align: center; border-radius: 12px; }
-        .auth-container h2 { margin-bottom: 20px; font-weight: 700; font-size: 22px; letter-spacing: -0.5px; }
-        .auth-input { width: 100%; background: var(--input-bg); border: 1px solid var(--input-border); padding: 12px; border-radius: 6px; color: var(--text-color); font-size: 14px; margin-bottom: 12px; outline: none; }
-        .auth-input:focus { border-color: var(--text-color); }
-        .auth-btn { width: 100%; background: var(--text-color); border: none; color: var(--bg-body); padding: 12px; border-radius: 6px; cursor: pointer; font-weight: 700; font-size: 14px; margin-bottom: 14px; text-transform: uppercase; letter-spacing: 1px; }
+        .auth-container { width: 90vw; max-width: 360px; height: auto; padding: 30px 20px; text-align: center; border-radius: 12px; margin: auto; }
+        .auth-container h2 { margin-bottom: 20px; font-weight: 700; font-size: 22px; letter-spacing: -0.5px; text-transform: uppercase; }
+        .auth-input, .control-input { width: 100%; background: var(--input-bg); border: 1px solid var(--input-border); padding: 12px; border-radius: 6px; color: var(--text-color); font-size: 14px; margin-bottom: 12px; outline: none; }
+        .auth-input:focus, .control-input:focus { border-color: var(--text-color); box-shadow: 0 0 8px rgba(255,255,255,0.1); }
+        .auth-btn, .profile-save-btn { width: 100%; background: var(--text-color); border: none; color: var(--bg-body); padding: 12px; border-radius: 6px; cursor: pointer; font-weight: 700; font-size: 14px; margin-bottom: 14px; text-transform: uppercase; letter-spacing: 1px; }
+        .auth-btn:hover, .profile-save-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(255,255,255,0.2); }
         .toggle-auth { font-size: 12px; color: var(--meta-color); cursor: pointer; text-decoration: underline; }
 
-        /* Контейнер чата */
+        /* Мессенджер */
         .messenger-container { display: none; width: 100vw; height: 100vh; }
         
         /* Шапка */
@@ -90,25 +96,20 @@
         .my-avatar { width: 28px; height: 28px; border-radius: 50%; object-fit: cover; border: 1px solid var(--border-color); filter: grayscale(100%); }
         .my-nickname { font-weight: 700; font-size: 14px; }
         .header-nav-btns { display: flex; gap: 6px; }
-        .nav-btn { font-size: 12px; border: 1px solid var(--border-color); padding: 6px 10px; border-radius: 4px; font-weight: 600; color: var(--text-color); background: transparent; cursor: pointer; }
-        .nav-btn:active { background: var(--text-color); color: var(--bg-body); }
+        .nav-btn, .control-btn, .call-act-btn { font-size: 12px; border: 1px solid var(--border-color); padding: 6px 10px; border-radius: 4px; font-weight: 600; color: var(--text-color); background: transparent; cursor: pointer; }
+        .nav-btn:hover, .control-btn:hover, .call-act-btn:hover { background: var(--text-color); color: var(--bg-body); transform: translateY(-1px); }
         
-        /* Кнопки управления */
         .controls-row { display: flex; gap: 6px; }
-        .control-input { flex: 1; background: var(--input-bg); border: 1px solid var(--input-border); padding: 8px 12px; border-radius: 6px; color: var(--text-color); font-size: 13px; outline: none; }
-        .control-input:focus { border-color: var(--text-color); }
-        .control-btn { border: 1px solid var(--border-color); background: transparent; color: var(--text-color); padding: 0 12px; border-radius: 6px; font-weight: 600; font-size: 12px; cursor: pointer; }
-        .control-btn:active { background: var(--text-color); color: var(--bg-body); }
 
-        /* Настройки профиля */
+        /* Настройки */
         .profile-settings-panel { display: none; padding: 12px 0; border-top: 1px solid var(--border-color); margin-top: 5px; gap: 8px; flex-direction: column; }
-        .theme-switch-btn, .profile-save-btn { width: 100%; padding: 8px; border: 1px solid var(--border-color); background: transparent; color: var(--text-color); border-radius: 6px; font-weight: 700; font-size: 12px; cursor: pointer; }
-        .profile-save-btn { background: var(--text-color); color: var(--bg-body); border: none; }
+        .theme-switch-btn { width: 100%; padding: 8px; border: 1px solid var(--border-color); background: transparent; color: var(--text-color); border-radius: 6px; font-weight: 700; font-size: 12px; cursor: pointer; }
+        #fileInput { color: var(--text-color); font-size: 12px; margin: 5px 0; }
 
-        /* Список чатов */
+        /* Списки Хабов */
         .hub-selector { display: flex; gap: 6px; padding: 10px 14px; overflow-x: auto; border-bottom: 1px solid var(--border-color); }
         .hub-item { padding: 6px 12px; border-radius: 4px; background: var(--input-bg); font-size: 12px; font-weight: 600; white-space: nowrap; border: 1px solid var(--input-border); color: var(--text-color); cursor: pointer; }
-        .hub-item.active { background: var(--text-color); color: var(--bg-body); border-color: var(--text-color); }
+        .hub-item.active { background: var(--text-color); color: var(--bg-body); border-color: var(--text-color); transform: scale(1.05); }
 
         /* Окно сообщений */
         .chat-window { flex: 1; display: flex; flex-direction: column; }
@@ -116,7 +117,6 @@
         #chatHeaderTitle { font-size: 13px; font-weight: 700; text-transform: uppercase; }
         #chatHeaderStatus { font-size: 11px; color: var(--meta-color); margin-left: 6px; }
         .call-action-btns { display: none; gap: 6px; }
-        .call-act-btn { background: transparent; border: 1px solid var(--border-color); color: var(--text-color); font-size: 14px; width: 32px; height: 32px; border-radius: 4px; cursor: pointer; display: flex; justify-content: center; align-items: center; }
         
         .messages-area { flex: 1; padding: 14px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
         .message-row { display: flex; gap: 8px; width: 100%; }
@@ -124,17 +124,18 @@
         
         .message { max-width: 80%; padding: 8px 12px; border-radius: 4px; font-size: 13px; line-height: 1.4; word-wrap: break-word; display: flex; flex-direction: column; }
         .message .sender-tag { font-size: 10px; font-weight: 700; margin-bottom: 2px; color: var(--meta-color); }
-        .message-row.incoming .message { background: var(--msg-in-bg); border: 1px solid var(--border-color); }
-        .message-row.outgoing .message { background: var(--msg-out-bg); color: var(--msg-out-text); }
+        .message-row.incoming .message { background: var(--msg-in-bg); border: 1px solid var(--border-color); animation: slideInLeft 0.3s ease; }
+        .message-row.outgoing .message { background: var(--msg-out-bg); color: var(--msg-out-text); animation: slideInRight 0.3s ease; }
         
-        .block-user-btn { font-size: 9px; color: red; background: transparent; border: none; text-align: left; margin-top: 4px; cursor: pointer; text-decoration: underline; }
+        @keyframes slideInLeft { from { opacity: 0; transform: translateX(-10px); } to { opacity: 1; transform: translateX(0); } }
+        @keyframes slideInRight { from { opacity: 0; transform: translateX(10px); } to { opacity: 1; transform: translateX(0); } }
+
         .meta-container { display: flex; align-items: center; justify-content: flex-end; gap: 4px; margin-top: 4px; }
         .message-meta { font-size: 9px; color: var(--meta-color); }
 
-        /* Поле ввода */
+        /* Нижняя панель */
         .input-area { padding: 14px; display: flex; gap: 8px; border-top: 1px solid var(--border-color); align-items: center; }
         .message-input { flex: 1; background: var(--input-bg); border: 1px solid var(--input-border); outline: none; padding: 12px; border-radius: 6px; color: var(--text-color); font-size: 14px; }
-        .message-input:focus { border-color: var(--text-color); }
         
         .send-btn, .voice-start-btn { background: transparent; border: 1px solid var(--border-color); color: var(--text-color); padding: 12px 16px; border-radius: 6px; font-weight: 700; font-size: 13px; cursor: pointer; }
         .send-btn:active, .voice-start-btn:active { background: var(--text-color); color: var(--bg-body); }
@@ -155,7 +156,6 @@
         <button class="btn-end-call" id="endCallBtn">✖</button>
     </div>
 
-    <!-- Авторизация -->
     <div class="auth-container glass-panel" id="authBox">
         <h2 id="authTitle">BROCHAT LOGIN</h2>
         <input type="text" class="auth-input" id="authUsername" placeholder="НИКНЕЙМ" style="display: none;">
@@ -165,7 +165,6 @@
         <div class="toggle-auth" id="toggleAuth">СОЗДАТЬ АККАУНТ</div>
     </div>
 
-    <!-- Мессенджер -->
     <div class="messenger-container glass-panel" id="messengerBox">
         <div class="app-header">
             <div class="header-top">
@@ -182,9 +181,9 @@
             <div class="profile-settings-panel" id="profilePanel">
                 <button class="theme-switch-btn" id="themeSwitchBtn">СМЕНИТЬ РЕЖИМ (B/W)</button>
                 <input type="text" class="control-input" id="customNameInput" placeholder="ИЗМЕНИТЬ ИМЯ">
-                <input type="text" class="control-input" id="customAvatarInput" placeholder="ССЫЛКА НА АВАТАР">
-                <button class="profile-save-btn" id="saveProfileBtn">СОХРАНИТЬ</button>
-                <div id="blockedUsersList" style="display:none;"></div>
+                <label for="fileInput" style="font-size: 10px; color: var(--meta-color);">АВАТАР ИЗ ПАМЯТИ:</label>
+                <input type="file" id="fileInput" accept="image/*">
+                <button class="profile-save-btn" id="saveProfileBtn">СОХРАНИТЬ ПРОФИЛЬ</button>
             </div>
 
             <div class="controls-row">
@@ -230,20 +229,21 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
         import { getFirestore, doc, setDoc, getDoc, collection, query, where, getDocs, addDoc, onSnapshot, orderBy, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-storage.js";
 
-        const part1 = "AIzaSyD_eF_UR7iG"; const part2 = "XbXlHDroAGYPDfAbd6zX27g";
-        const firebaseConfig = { apiKey: part1 + part2, authDomain: "brochat-ce389.firebaseapp.com", projectId: "brochat-ce389", storageBucket: "brochat-ce389.appspot.com", messagingSenderId: "856173025113", appId: "1:856173025113:web:c3910728e5195a62db5e48" };
+        const firebaseConfig = { apiKey: "AIzaSyD_eF_UR7iG" + "XbXlHDroAGYPDfAbd6zX27g", authDomain: "brochat-ce389.firebaseapp.com", projectId: "brochat-ce389", storageBucket: "brochat-ce389.appspot.com", messagingSenderId: "856173025113", appId: "1:856173025113:web:c3910728e5195a62db5e48" };
 
         const app = initializeApp(firebaseConfig); 
         const auth = getAuth(app); 
         const db = getFirestore(app);
+        const storage = getStorage(app);
 
-        // UI Элементы
+        // UI
         const authBox = document.getElementById('authBox'), messengerBox = document.getElementById('messengerBox');
         const authTitle = document.getElementById('authTitle'), authBtn = document.getElementById('authBtn'), toggleAuth = document.getElementById('toggleAuth');
         const usernameInput = document.getElementById('authUsername'), emailInput = document.getElementById('authEmail'), passwordInput = document.getElementById('authPassword');
         const myNicknameDisplay = document.getElementById('myNickname'), myAvatarDisplay = document.getElementById('myAvatarDisplay'), logoutBtn = document.getElementById('logoutBtn');
-        const profileToggleBtn = document.getElementById('profileToggleBtn'), profilePanel = document.getElementById('profilePanel'), customNameInput = document.getElementById('customNameInput'), customAvatarInput = document.getElementById('customAvatarInput'), saveProfileBtn = document.getElementById('saveProfileBtn'), themeSwitchBtn = document.getElementById('themeSwitchBtn');
+        const profileToggleBtn = document.getElementById('profileToggleBtn'), profilePanel = document.getElementById('profilePanel'), customNameInput = document.getElementById('customNameInput'), fileInput = document.getElementById('fileInput'), saveProfileBtn = document.getElementById('saveProfileBtn'), themeSwitchBtn = document.getElementById('themeSwitchBtn');
         const hubInput = document.getElementById('hubInput'), addFriendBtn = document.getElementById('addFriendBtn'), createGroupBtn = document.getElementById('createGroupBtn');
         const hubSelector = document.getElementById('hubSelector'), chatHeaderTitle = document.getElementById('chatHeaderTitle'), chatHeaderStatus = document.getElementById('chatHeaderStatus'), messagesArea = document.getElementById('messagesArea'), callBtnsBlock = document.getElementById('callBtnsBlock');
         const messageInput = document.getElementById('messageInput'), sendBtn = document.getElementById('sendBtn');
@@ -256,67 +256,75 @@
         let voiceInterval = null, voiceSeconds = 0, localStream = null, currentFriendStatus = "не в сети";
         const defaultAvatar = "https://api.dicebear.com/7.x/bottts/svg?seed=bro";
 
-        // РАБОТА КНОПКИ НАСТРОЕК (ПРОФИЛЯ)
-        profileToggleBtn.addEventListener('click', () => {
-            if (profilePanel.style.display === 'flex') {
-                profilePanel.style.display = 'none';
-            } else {
-                profilePanel.style.display = 'flex';
-            }
-        });
+        // Кнопка Настроек
+        profileToggleBtn.addEventListener('click', () => profilePanel.style.display = profilePanel.style.display === 'flex' ? 'none' : 'flex');
 
-        // Смена темы
+        // Тема
         themeSwitchBtn.addEventListener('click', () => { 
             currentTheme = currentTheme === 'dark' ? 'light' : 'dark'; 
             document.documentElement.setAttribute('data-theme', currentTheme); 
         });
 
-        // Сохранение настроек профиля
+        // Сохранение Профиля + Загрузка фото из памяти
         saveProfileBtn.addEventListener('click', async () => {
             if (!auth.currentUser) return;
+            saveProfileBtn.textContent = "ЗАГРУЗКА...";
+            
+            let avatarUrl = currentUserData.avatarUrl || defaultAvatar;
+            const file = fileInput.files[0];
+
+            if (file) {
+                const storageRef = ref(storage, 'avatars/' + auth.currentUser.uid);
+                await uploadBytes(storageRef, file);
+                avatarUrl = await getDownloadURL(storageRef);
+            }
+
             const newName = customNameInput.value.trim();
-            const newUrl = customAvatarInput.value.trim();
             await updateDoc(doc(db, "users", auth.currentUser.uid), {
                 displayName: newName || currentUserData.username,
-                avatarUrl: newUrl || defaultAvatar
+                avatarUrl: avatarUrl
             });
-            alert("Профиль обновлен!");
+            
+            saveProfileBtn.textContent = "СОХРАНИТЬ ПРОФИЛЬ";
+            alert("Профиль обновлен, Гусь!");
             profilePanel.style.display = 'none';
         });
 
-        toggleAuth.addEventListener('click', () => { isSignUp = !isSignUp; authTitle.textContent = isSignUp ? "BROCHAT REGISTRATION" : "BROCHAT LOGIN"; authBtn.textContent = isSignUp ? "СОЗДАТЬ" : "ВОЙТИ"; toggleAuth.textContent = isSignUp ? "ЕСТЬ АККАУНТ? ВОЙТИ" : "СОЗДАТЬ АККАУНТ"; usernameInput.style.display = isSignUp ? 'block' : 'none'; });
+        toggleAuth.addEventListener('click', () => { isSignUp = !isSignUp; authTitle.textContent = isSignUp ? "REGISTRATION" : "LOGIN"; authBtn.textContent = isSignUp ? "СОЗДАТЬ" : "ВОЙТИ"; toggleAuth.textContent = isSignUp ? "ЕСТЬ АККАУНТ? ВОЙТИ" : "СОЗДАТЬ АККАУНТ"; usernameInput.style.display = isSignUp ? 'block' : 'none'; });
         function triggerWelcomeToast(name) { toastUser.textContent = name; welcomeToast.classList.add('show'); setTimeout(() => welcomeToast.classList.remove('show'), 3000); }
 
-        // ЗАПРОС СИСТЕМНЫХ УВЕДОМЛЕНИЙ ПРИ СТАРТЕ
-        if ("Notification" in window) {
-            Notification.requestPermission();
+        // ИСПРАВЛЕННЫЙ ЗАПРОС ПУШЕЙ (Форсированный запуск окна)
+        async function requestNotificationPermission() {
+            if (!("Notification" in window)) return;
+            
+            // Если мы сидим через file:// или http://, браузер молча отклонит. Предупреждаем!
+            if (location.protocol !== 'https:' && location.hostname !== 'localhost') {
+                console.warn("Пуши заблокированы браузером: нужен HTTPS протокол или запуск на localhost!");
+                return;
+            }
+
+            if (Notification.permission === "default") {
+                await Notification.requestPermission();
+            }
         }
 
         async function setupPushNotifications(userUid) {
-            if ('serviceWorker' in navigator) {
-                try {
-                    const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
-                    console.log('Service Worker на базе!', registration);
-
-                    // СЛУШАЕМ БАЗУ НА ПРЕДМЕТ НОВЫХ ЗВОНКОВ (ДЛЯ PUSH НА ТАРИФЕ SPARK)
-                    // Вместо FCM Cloud API, клиент сам слушает коллекцию "calls" и вызывает пуш
-                    onSnapshot(query(collection(db, "calls"), where("toUid", "==", userUid)), (snapshot) => {
-                        snapshot.docChanges().forEach((change) => {
-                            if (change.type === "added") {
-                                const callData = change.doc.data();
-                                if (Notification.permission === "granted") {
-                                    new Notification("🤙 Входящий вызов в BroChat!", {
-                                        body: `Тебе звонит @${callData.fromName}! Открой вкладку!`,
-                                        requireInteraction: true
-                                    });
-                                }
-                            }
-                        });
-                    });
-                } catch (error) {
-                    console.log('Ошибка пушей:', error);
-                }
-            }
+            await requestNotificationPermission();
+            
+            // Клиентский хак мониторинга вызовов
+            onSnapshot(query(collection(db, "calls"), where("toUid", "==", userUid)), (snapshot) => {
+                snapshot.docChanges().forEach((change) => {
+                    if (change.type === "added") {
+                        const callData = change.doc.data();
+                        if (Notification.permission === "granted") {
+                            new Notification("🤙 Вызов в BroChat!", {
+                                body: `Тебе звонит @${callData.fromName}! Открывай вкладку!`,
+                                requireInteraction: true
+                            });
+                        }
+                    }
+                });
+            });
         }
 
         async function setUserOnlineStatus(statusValue) {
@@ -334,9 +342,8 @@
                     myNicknameDisplay.textContent = finalName.toUpperCase(); 
                     myAvatarDisplay.src = currentUserData.avatarUrl || defaultAvatar;
                     customNameInput.value = currentUserData.displayName || ""; 
-                    customAvatarInput.value = currentUserData.avatarUrl || "";
-                    if (messengerBox.style.display !== 'flex') triggerWelcomeToast(finalName.toUpperCase());
                     
+                    if (messengerBox.style.display !== 'flex') triggerWelcomeToast(finalName.toUpperCase());
                     await setUserOnlineStatus("онлайн");
                     setupPushNotifications(user.uid);
                     loadHubs();
@@ -365,25 +372,15 @@
             signOut(auth);
         });
 
-        // Запись системного вызова в БД для пробития пуш-уведомления
         async function triggerCallPush(friendUid) {
-            await addDoc(collection(db, "calls"), {
-                toUid: friendUid,
-                fromName: currentUserData.username,
-                timestamp: new Date()
-            });
+            await addDoc(collection(db, "calls"), { toUid: friendUid, fromName: currentUserData.username, timestamp: new Date() });
         }
 
-        // Звонки
         async function startCall(type) {
             callAvatar.src = activeHub.data.avatarUrl || defaultAvatar;
             callStatusTitle.textContent = type === 'video' ? `ВИДЕОВЫЗОВ: @${activeHub.data.username.toUpperCase()}` : `АУДИОВЫЗОВ: @${activeHub.data.username.toUpperCase()}`;
             callScreen.style.display = 'flex';
-            
-            // Если друг не в сети — отправляем сигнал через Firestore для пуша
-            if (currentFriendStatus !== "онлайн") {
-                triggerCallPush(activeHub.data.uid);
-            }
+            if (currentFriendStatus !== "онлайн") triggerCallPush(activeHub.data.uid);
 
             if (type === 'video') {
                 callVideoPreview.style.display = 'block';
@@ -394,7 +391,7 @@
         videoCallBtn.addEventListener('click', () => startCall('video'));
         endCallBtn.addEventListener('click', () => { callScreen.style.display = 'none'; if (localStream) { localStream.getTracks().forEach(track => track.stop()); localStream = null; } });
 
-        // Голосовые сообщения
+        // ГС
         voiceStartBtn.addEventListener('click', () => {
             messageInput.style.display = 'none'; voiceStartBtn.style.display = 'none'; sendBtn.style.display = 'none';
             voiceRecordPanel.style.display = 'flex'; voiceSeconds = 0; voiceTimer.textContent = "00:00";
@@ -406,20 +403,14 @@
             }, 1000);
         });
         function resetVoicePanel() { clearInterval(voiceInterval); voiceRecordPanel.style.display = 'none'; messageInput.style.display = 'block'; voiceStartBtn.style.display = 'flex'; sendBtn.style.display = 'flex'; }
-        voiceCancelBtn.addEventListener('click', () => { resetVoicePanel(); });
+        voiceCancelBtn.addEventListener('click', () => resetVoicePanel());
         voiceSuccessBtn.addEventListener('click', async () => {
             const duration = voiceTimer.textContent; resetVoicePanel();
             const targetPath = activeHub.type === 'dm' ? `chats/${[auth.currentUser.uid, activeHub.data.uid].sort().join('_')}/messages` : `groups/${activeHub.data.id}/messages`;
-            await addDoc(collection(db, targetPath), {
-                text: `🎙️ ГОЛОСОВОЕ СООБЩЕНИЕ (${duration})`,
-                isVoice: true,
-                senderId: auth.currentUser.uid,
-                senderName: currentUserData.displayName || "@" + currentUserData.username,
-                timestamp: new Date()
-            });
+            await addDoc(collection(db, targetPath), { text: `🎙️ ГОЛОСОВОЕ СООБЩЕНИЕ (${duration})`, isVoice: true, senderId: auth.currentUser.uid, senderName: currentUserData.displayName || "@" + currentUserData.username, timestamp: new Date() });
         });
 
-        // Друзья и группы
+        // Хабы
         addFriendBtn.addEventListener('click', async () => {
             const name = hubInput.value.trim().toLowerCase(); if (!name || name === currentUserData.username) return;
             const q = query(collection(db, "users"), where("username", "==", name)); const snap = await getDocs(q);
@@ -433,7 +424,7 @@
         createGroupBtn.addEventListener('click', async () => {
             const gName = hubInput.value.trim(); if (!gName) return;
             const gId = "group_" + gName.toLowerCase().replace(/\s+/g, '_'); const gDoc = await getDoc(doc(db, "groups", gId));
-            if (!gDoc.exists()) { await setDoc(doc(doc(db, "groups", gId)), { id: gId, name: gName, creator: currentUserData.username }); }
+            if (!gDoc.exists()) { await setDoc(doc(db, "groups", gId), { id: gId, name: gName, creator: currentUserData.username }); }
             if (!currentUserData.groups || !currentUserData.groups.includes(gId)) {
                 const myGroups = currentUserData.groups || []; myGroups.push(gId); await updateDoc(doc(db, "users", auth.currentUser.uid), { groups: myGroups });
                 currentUserData.groups = myGroups;
@@ -461,14 +452,9 @@
             if (unsubscribeStatus) unsubscribeStatus();
             if (type === 'dm') {
                 unsubscribeStatus = onSnapshot(doc(db, "users", data.uid), (docSnap) => {
-                    if (docSnap.exists()) {
-                        currentFriendStatus = docSnap.data().status || "не в сети";
-                        chatHeaderStatus.textContent = `(${currentFriendStatus.toUpperCase()})`;
-                    }
+                    if (docSnap.exists()) { currentFriendStatus = docSnap.data().status || "не в сети"; chatHeaderStatus.textContent = `(${currentFriendStatus.toUpperCase()})`; }
                 });
-            } else {
-                chatHeaderStatus.textContent = `(ADMIN: @${data.creator.toUpperCase()})`;
-            }
+            } else { chatHeaderStatus.textContent = `(ADMIN: @${data.creator.toUpperCase()})`; }
             
             const targetCollectionPath = type === 'dm' ? `chats/${[auth.currentUser.uid, data.uid].sort().join('_')}/messages` : `groups/${data.id}/messages`;
             if (unsubscribeMessages) unsubscribeMessages();
@@ -477,24 +463,15 @@
             unsubscribeMessages = onSnapshot(mq, (snapshot) => {
                 messagesArea.innerHTML = '';
                 snapshot.forEach((messageDoc) => {
-                    const m = messageDoc.data();
-                    const isMe = m.senderId === auth.currentUser.uid;
-                    
+                    const m = messageDoc.data(); const isMe = m.senderId === auth.currentUser.uid;
                     const row = document.createElement('div'); row.classList.add('message-row'); if (isMe) row.classList.add('outgoing');
                     const time = m.timestamp ? new Date(m.timestamp.toDate()).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '--:--';
-
-                    let msgContent = `<div>${m.text}</div>`;
-                    if (m.isVoice) {
-                        msgContent = `<div style="font-weight:bold;">${m.text}</div>`;
-                    }
-
+                    
                     row.innerHTML = `
                         <div class="message">
                             <span class="sender-tag">${m.senderName.toUpperCase()}</span>
-                            ${msgContent}
-                            <div class="meta-container">
-                                <span class="message-meta">${time}</span>
-                            </div>
+                            <div>${m.text}</div>
+                            <div class="meta-container"><span class="message-meta">${time}</span></div>
                         </div>
                     `;
                     messagesArea.appendChild(row);
@@ -506,13 +483,7 @@
         async function sendMessage() {
             const text = messageInput.value.trim(); if (!text || !activeHub) return;
             const targetPath = activeHub.type === 'dm' ? `chats/${[auth.currentUser.uid, activeHub.data.uid].sort().join('_')}/messages` : `groups/${activeHub.data.id}/messages`;
-            
-            await addDoc(collection(db, targetPath), { 
-                text: text, 
-                senderId: auth.currentUser.uid, 
-                senderName: currentUserData.displayName || "@" + currentUserData.username, 
-                timestamp: new Date()
-            });
+            await addDoc(collection(db, targetPath), { text: text, senderId: auth.currentUser.uid, senderName: currentUserData.displayName || "@" + currentUserData.username, timestamp: new Date() });
             messageInput.value = ''; messageInput.focus();
         }
         sendBtn.addEventListener('click', sendMessage); messageInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') sendMessage(); });
