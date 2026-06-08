@@ -234,6 +234,7 @@
         import { getFirestore, doc, setDoc, getDoc, collection, query, where, getDocs, addDoc, onSnapshot, orderBy, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
         import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-storage.js";
 
+        // Твои конфиги Firebase
         const firebaseConfig = { apiKey: "AIzaSyD_eF_UR7iG" + "XbXlHDroAGYPDfAbd6zX27g", authDomain: "brochat-ce389.firebaseapp.com", projectId: "brochat-ce389", storageBucket: "brochat-ce389.appspot.com", messagingSenderId: "856173025113", appId: "1:856173025113:web:c3910728e5195a62db5e48" };
 
         const app = initializeApp(firebaseConfig); 
@@ -241,7 +242,7 @@
         const db = getFirestore(app);
         const storage = getStorage(app);
 
-        // UI Элементы
+        // Получаем элементы интерфейса
         const authBox = document.getElementById('authBox'), messengerBox = document.getElementById('messengerBox');
         const authTitle = document.getElementById('authTitle'), authBtn = document.getElementById('authBtn'), toggleAuth = document.getElementById('toggleAuth');
         const usernameInput = document.getElementById('authUsername'), emailInput = document.getElementById('authEmail'), passwordInput = document.getElementById('authPassword');
@@ -262,11 +263,11 @@
         profileToggleBtn.addEventListener('click', () => profilePanel.style.display = profilePanel.style.display === 'flex' ? 'none' : 'flex');
         themeSwitchBtn.addEventListener('click', () => { currentTheme = currentTheme === 'dark' ? 'light' : 'dark'; document.documentElement.setAttribute('data-theme', currentTheme); });
 
-        // ФИКСИРОВАННОЕ СОХРАНЕНИЕ ПРОФИЛЯ — С ЗАЩИТОЙ ОТ ЗАВИСАНИЯ
+        // ФУНКЦИЯ СОХРАНЕНИЯ ПРОФИЛЯ (С КНОПКОЙ-ФАЙЛОМ И ЗАЩИТОЙ ОТ ЗАВИСАНИЯ)
         saveProfileBtn.addEventListener('click', async () => {
             if (!auth.currentUser) return;
             
-            // Защита: отключаем кнопку, чтобы не кликать повторно
+            // Лочим кнопку, чтобы избежать спам-кликов
             saveProfileBtn.disabled = true;
             saveProfileBtn.textContent = "ЗАГРУЗКА...";
             
@@ -274,7 +275,7 @@
                 let avatarUrl = currentUserData.avatarUrl || defaultAvatar;
                 const file = fileInput.files[0];
 
-                // Скрипт полезет в Storage ТОЛЬКО если файл физически выбран
+                // В Storage лезем только тогда, когда файл РЕАЛЬНО выбран в галерее
                 if (file) {
                     const storageRef = ref(storage, 'avatars/' + auth.currentUser.uid);
                     await uploadBytes(storageRef, file);
@@ -283,7 +284,7 @@
 
                 const newName = customNameInput.value.trim();
                 
-                // Передаем изменения в Firestore
+                // Пушим обновления в Firestore
                 await updateDoc(doc(db, "users", auth.currentUser.uid), {
                     displayName: newName || currentUserData.username,
                     avatarUrl: avatarUrl
@@ -293,10 +294,10 @@
                 profilePanel.style.display = 'none';
 
             } catch (error) {
-                console.error("Ошибка обновления профиля:", error);
-                alert("Бро, произошла ошибка Firebase! Проверь консоль (F12) или правила доступа (Rules).");
+                console.error("Ошибка при обновлении данных:", error);
+                alert("Бро, произошла ошибка! Проверь вкладку Storage Rules в консоли Firebase.");
             } finally {
-                // В ЛЮБОМ СЛУЧАЕ возвращаем кнопку в рабочий режим, исключая зависание
+                // Блок выполнится при любом исходе — кнопка 100% отвиснет
                 saveProfileBtn.disabled = false;
                 saveProfileBtn.textContent = "СОХРАНИТЬ ПРОФИЛЬ";
             }
@@ -387,7 +388,7 @@
         videoCallBtn.addEventListener('click', () => startCall('video'));
         endCallBtn.addEventListener('click', () => { callScreen.style.display = 'none'; if (localStream) { localStream.getTracks().forEach(track => track.stop()); localStream = null; } });
 
-        // Голосовые
+        // Система аудиосообщений
         voiceStartBtn.addEventListener('click', () => {
             messageInput.style.display = 'none'; voiceStartBtn.style.display = 'none'; sendBtn.style.display = 'none';
             voiceRecordPanel.style.display = 'flex'; voiceSeconds = 0; voiceTimer.textContent = "00:00";
@@ -406,7 +407,7 @@
             await addDoc(collection(db, targetPath), { text: `🎙️ ГОЛОСОВОЕ СООБЩЕНИЕ (${duration})`, isVoice: true, senderId: auth.currentUser.uid, senderName: currentUserData.displayName || "@" + currentUserData.username, timestamp: new Date() });
         });
 
-        // Работа со списками чатов
+        // Списки активностей чатов
         addFriendBtn.addEventListener('click', async () => {
             const name = hubInput.value.trim().toLowerCase(); if (!name || name === currentUserData.username) return;
             const q = query(collection(db, "users"), where("username", "==", name)); const snap = await getDocs(q);
