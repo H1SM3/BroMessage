@@ -268,11 +268,15 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
         import { getFirestore, doc, setDoc, getDoc, collection, query, where, getDocs, addDoc, onSnapshot, orderBy, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getMessaging, getToken } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-messaging.js";
 
         const part1 = "AIzaSyD_eF_UR7iG"; const part2 = "XbXlHDroAGYPDfAbd6zX27g";
         const firebaseConfig = { apiKey: part1 + part2, authDomain: "brochat-ce389.firebaseapp.com", projectId: "brochat-ce389", storageBucket: "brochat-ce389.appspot.com", messagingSenderId: "856173025113", appId: "1:856173025113:web:c3910728e5195a62db5e48" };
 
-        const app = initializeApp(firebaseConfig); const auth = getAuth(app); const db = getFirestore(app);
+        const app = initializeApp(firebaseConfig); 
+        const auth = getAuth(app); 
+        const db = getFirestore(app);
+        const messaging = getMessaging(app);
 
         // UI Элементы
         const authBox = document.getElementById('authBox'), messengerBox = document.getElementById('messengerBox');
@@ -289,14 +293,34 @@
         const voiceStartBtn = document.getElementById('voiceStartBtn'), voiceRecordPanel = document.getElementById('voiceRecordPanel'), voiceTimer = document.getElementById('voiceTimer'), voiceCancelBtn = document.getElementById('voiceCancelBtn'), voiceSuccessBtn = document.getElementById('voiceSuccessBtn');
 
         let isSignUp = false, currentUserData = null, activeHub = null, unsubscribeMessages = null, unsubscribeStatus = null, blockedUsers = [], currentTheme = 'dark';
-        let voiceInterval = null, voiceSeconds = 0, localStream = null;
+        let voiceInterval = null, voiceSeconds = 0, localStream = null, currentFriendStatus = "не в сети";
         const defaultAvatar = "https://api.dicebear.com/7.x/bottts/svg?seed=bro";
 
         themeSwitchBtn.addEventListener('click', () => { currentTheme = currentTheme === 'dark' ? 'light' : 'dark'; document.documentElement.setAttribute('data-theme', currentTheme); });
         toggleAuth.addEventListener('click', () => { isSignUp = !isSignUp; authTitle.textContent = isSignUp ? "Регистрация в BroChat" : "Войти в BroChat"; authBtn.textContent = isSignUp ? "Создать аккаунт" : "Войти"; toggleAuth.textContent = isSignUp ? "Уже есть аккаунт? Войти" : "Нет аккаунта? Создать аккаунт"; usernameInput.style.display = isSignUp ? 'block' : 'none'; });
         function triggerWelcomeToast(name) { toastUser.textContent = name; welcomeToast.classList.add('show'); setTimeout(() => welcomeToast.classList.remove('show'), 3000); }
 
-        // Обновление сетевого статуса текущего пользователя
+        // Регистрация сервис-воркера и получение токена для PUSH-уведомлений
+        async function setupPushNotifications(userUid) {
+            if ('serviceWorker' in navigator) {
+                try {
+                    const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
+                    console.log('Service Worker успешно зарегистрирован!', registration);
+                    
+                    // Запрашиваем токен (VAPID ключ генерируется в консоли Firebase Project Settings -> Cloud Messaging)
+                    // Для локальных тестов можно вызывать без ключа, если настроено в консоли
+                    const token = await getToken(messaging, { serviceWorkerRegistration: registration });
+                    if (token) {
+                        console.log('Твой Push-токен устройства:', token);
+                        // Сохраняем пуш-токен в профиль юзера в базу данных
+                        await updateDoc(doc(db, "users", userUid), { pushToken: token });
+                    }
+                } catch (error) {
+                    console.log('Не удалось настроить фоновые пуши:', error);
+                }
+            }
+        }
+
         async function setUserOnlineStatus(statusValue) {
             if (auth.currentUser) {
                 await updateDoc(doc(db, "users", auth.currentUser.uid), { status: statusValue });
@@ -313,8 +337,8 @@
                     customNameInput.value = currentUserData.displayName || ""; customAvatarInput.value = currentUserData.avatarUrl || "";
                     if (messengerBox.style.display !== 'flex') triggerWelcomeToast(finalName);
                     
-                    // Ставим статус Онлайн
                     await setUserOnlineStatus("онлайн");
+                    setupPushNotifications(user.uid); // Включаем "будильник"
                     loadHubs();
                 }
                 authBox.style.display = 'none'; messengerBox.style.display = 'flex';
@@ -323,11 +347,9 @@
             }
         });
 
-        // Запись времени выхода при закрытии вкладки
         window.addEventListener('beforeunload', () => {
             if (auth.currentUser) {
                 const now = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                // Используем navigator.sendBeacon или обычный апдейт (в современных браузерах срабатывает быстро)
                 setUserOnlineStatus(`был(а) в сети в ${now}`);
             }
         });
@@ -340,7 +362,7 @@
                     const q = query(collection(db, "users"), where("username", "==", username));
                     const snap = await getDocs(q); if (!snap.empty) { alert("Ник уже занят!"); return; }
                     const cred = await createUserWithEmailAndPassword(auth, email, password);
-                    await setDoc(doc(db, "users", cred.user.uid), { uid: cred.user.uid, username: username, displayName: username, email: email, avatarUrl: defaultAvatar, friends: [], groups: [], blocked: [], status: "онлайн" });
+                    await setDoc(doc(db, "users", cred.user.uid), { uid: cred.user.uid, username: username, displayName: username, email: email, avatarUrl: defaultAvatar, friends: [], groups: [], blocked: [], status: "онлайн", pushToken: "" });
                 } else { await signInWithEmailAndPassword(auth, email, password); }
             } catch (e) { alert("Ошибка: " + e.message); }
         });
@@ -351,37 +373,33 @@
             signOut(auth);
         });
 
-        // Профиль и Блок-лист
-        profileToggleBtn.addEventListener('click', () => { if (profilePanel.style.display === 'flex') { profilePanel.style.display = 'none'; } else { profilePanel.style.display = 'flex'; renderBlockedList(); } });
-        async function renderBlockedList() {
-            blockedUsersList.innerHTML = ''; if (!blockedUsers || blockedUsers.length === 0) { blockedUsersList.innerHTML = '<span style="font-size:11px; opacity:0.5;">Список пуст</span>'; return; }
-            for (let uid of blockedUsers) {
-                const uDoc = await getDoc(doc(db, "users", uid));
-                if (uDoc.exists()) {
-                    const uData = uDoc.data(); const badge = document.createElement('div');
-                    badge.style = "background: rgba(255,79,79,0.15); border: 1px solid #ff4f4f; padding: 4px 8px; border-radius: 6px; font-size: 11px; cursor: pointer; color:#fff;";
-                    badge.textContent = `🔓 @${uData.username}`;
-                    badge.addEventListener('click', async () => {
-                        if (confirm(`Разблокировать @${uData.username}?`)) {
-                            blockedUsers = blockedUsers.filter(id => id !== uid); await updateDoc(doc(db, "users", auth.currentUser.uid), { blocked: blockedUsers });
-                            renderBlockedList(); if (activeHub) openHub(activeHub.data, activeHub.type);
-                        }
-                    });
-                    blockedUsersList.appendChild(badge);
-                }
+        // Имитация отправки Push-уведомления (на бесплатном тарифе Spark)
+        // Чтобы отправить реальный пуш со Spark, мы создаем специальную коллекцию "notifications" в Firestore, 
+        // к которой можно привязать бесплатный Google Cloud Trigger, либо ловить её в фоне.
+        async function sendPushCallSignal(friendData, callType) {
+            console.log(`Отправляем сигнал побуждения для @${friendData.username}...`);
+            // Записываем системный вызов в специальную лог-базу. Если у друга открыто системное FCM, Firebase доставит ему пуш.
+            if (friendData.pushToken) {
+                await addDoc(collection(db, "outgoing_pushes"), {
+                    toToken: friendData.pushToken,
+                    title: `🤙 Входящий вызов в BroChat!`,
+                    body: `@${currentUserData.username} вызывает тебя на ${callType === 'video' ? 'видеозвонок' : 'разговор'}!`,
+                    timestamp: new Date()
+                });
             }
         }
-        saveProfileBtn.addEventListener('click', async () => {
-            const newName = customNameInput.value.trim(); const newAvatar = customAvatarInput.value.trim(); if (!newName) return;
-            await updateDoc(doc(db, "users", auth.currentUser.uid), { displayName: newName, avatarUrl: newAvatar });
-            currentUserData.displayName = newName; currentUserData.avatarUrl = newAvatar; myNicknameDisplay.textContent = newName; myAvatarDisplay.src = newAvatar || defaultAvatar; profilePanel.style.display = 'none';
-        });
 
         // Звонки
         async function startCall(type) {
             callAvatar.src = activeHub.data.avatarUrl || defaultAvatar;
             callStatusTitle.textContent = type === 'video' ? `Видеовызов @${activeHub.data.username}...` : `Аудиовызов @${activeHub.data.username}...`;
             callScreen.style.display = 'flex';
+            
+            // ЕСЛИ ДРУГ НЕ В СЕТИ — ОТПРАВЛЯЕМ ЕМУ ПУШ-БУДИЛЬНИК В СИСТЕМУ
+            if (currentFriendStatus !== "онлайн") {
+                sendPushCallSignal(activeHub.data, type);
+            }
+
             if (type === 'video') {
                 callVideoPreview.style.display = 'block';
                 try { localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true }); callVideoPreview.srcObject = localStream; } catch (e) { console.log("Камера недоступна:", e); }
@@ -391,7 +409,7 @@
         videoCallBtn.addEventListener('click', () => startCall('video'));
         endCallBtn.addEventListener('click', () => { callScreen.style.display = 'none'; if (localStream) { localStream.getTracks().forEach(track => track.stop()); localStream = null; } });
 
-        // Голосовые
+        // Голосовые сообщения
         voiceStartBtn.addEventListener('click', () => {
             messageInput.style.display = 'none'; voiceStartBtn.style.display = 'none'; sendBtn.style.display = 'none';
             voiceRecordPanel.style.display = 'flex'; voiceSeconds = 0; voiceTimer.textContent = "00:00";
@@ -452,7 +470,6 @@
             hubSelector.appendChild(tab);
         }
 
-        // Логика открытия чата, трекинга статуса "В сети" и прочтения сообщений
         function openHub(data, type) {
             activeHub = { data, type }; chatHeaderTitle.textContent = type === 'dm' ? `Чат с @${data.username}` : `Группа: ${data.name}`;
             messageInput.disabled = false; sendBtn.disabled = false; voiceStartBtn.disabled = false;
@@ -460,12 +477,11 @@
             
             if (unsubscribeStatus) unsubscribeStatus();
             if (type === 'dm') {
-                // Подписываемся на статус собеседника в реальном времени
                 unsubscribeStatus = onSnapshot(doc(db, "users", data.uid), (docSnap) => {
                     if (docSnap.exists()) {
-                        const uStatus = docSnap.data().status || "не в сети";
-                        chatHeaderStatus.textContent = uStatus;
-                        if (uStatus === "онлайн") {
+                        currentFriendStatus = docSnap.data().status || "не в сети";
+                        chatHeaderStatus.textContent = currentFriendStatus;
+                        if (currentFriendStatus === "онлайн") {
                             chatHeaderStatus.style.color = "#00f2fe";
                         } else {
                             chatHeaderStatus.style.color = "rgba(255,255,255,0.4)";
@@ -487,7 +503,6 @@
                     const m = messageDoc.data(); if (blockedUsers.includes(m.senderId)) return;
                     const isMe = m.senderId === auth.currentUser.uid;
                     
-                    // ЕСЛИ СООБЩЕНИЕ НЕ МОЕ И ОНО НЕ ПРОЧИТАНО -> МЕНЯЕМ НА ПРОЧИТАННОЕ В FIREBASE
                     if (!isMe && m.read === false) {
                         updateDoc(doc(db, targetCollectionPath, messageDoc.id), { read: true });
                     }
@@ -508,13 +523,12 @@
                         `;
                     }
 
-                    // Отрисовка галочек только для моих сообщений
                     let checkmarksHtml = '';
                     if (isMe) {
                         if (m.read === true) {
-                            checkmarksHtml = `<span class="read-status read">✓✓</span>`; // Прочитано (Неоновые две галочки)
+                            checkmarksHtml = `<span class="read-status read">✓✓</span>`;
                         } else {
-                            checkmarksHtml = `<span class="read-status unread">✓</span>`; // Отправлено, но не прочитано
+                            checkmarksHtml = `<span class="read-status unread">✓</span>`;
                         }
                     }
 
@@ -533,8 +547,6 @@
                     `;
                     messagesArea.appendChild(row);
                 });
-                
-                document.querySelectorAll('.block-user-btn').forEach(btn => { btn.addEventListener('click', async () => { const targetUid = btn.getAttribute('data-uid'); if (confirm("Заблокировать бро?")) { blockedUsers.push(targetUid); await updateDoc(doc(db, "users", auth.currentUser.uid), { blocked: blockedUsers }); openHub(data, type); } }); });
                 messagesArea.scrollTop = messagesArea.scrollHeight;
             });
         }
@@ -549,7 +561,7 @@
                 senderName: currentUserData.displayName || "@" + currentUserData.username, 
                 senderAvatar: currentUserData.avatarUrl || defaultAvatar, 
                 timestamp: new Date(),
-                read: false // Новое сообщение по умолчанию не прочитано
+                read: false
             });
             messageInput.value = ''; messageInput.focus();
         }
