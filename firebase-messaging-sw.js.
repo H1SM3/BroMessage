@@ -1,0 +1,52 @@
+// Этот скрипт работает на фоне, даже когда вкладка браузера закрыта!
+importScripts('https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js');
+importScripts('https://www.gstatic.com/firebasejs/10.8.0/firebase-messaging-compat.js');
+
+const firebaseConfig = {
+    apiKey: "AIzaSyD_eF_UR7iGXbXlHDroAGYPDfAbd6zX27g", // Твой ключ
+    authDomain: "brochat-ce389.firebaseapp.com",
+    projectId: "brochat-ce389",
+    storageBucket: "brochat-ce389.appspot.com",
+    messagingSenderId: "856173025113",
+    appId: "1:856173025113:web:c3910728e5195a62db5e48"
+};
+
+firebase.initializeApp(firebaseConfig);
+const messaging = firebase.messaging();
+
+// Перехватываем пуш-уведомление, когда бро не в сети/закрыл вкладку
+messaging.onBackgroundMessage((payload) => {
+    console.log('[sw.js] Прилетел фоновый пуш:', payload);
+
+    const notificationTitle = payload.data.title || 'BroChat Вызов!';
+    const notificationOptions = {
+        body: payload.data.body || 'Тебе кто-то звонит, бро!',
+        icon: payload.data.icon || 'https://api.dicebear.com/7.x/bottts/svg?seed=bro',
+        tag: 'call-notification', // Чтобы уведомления не плодились
+        renotify: true,
+        requireInteraction: true, // Уведомление не исчезнет, пока бро не кликнет
+        data: { url: self.location.origin } // Ссылка на твой сайт, чтобы открыть при клике
+    };
+
+    return self.registration.showNotification(notificationTitle, notificationOptions);
+});
+
+// Если друг кликнул по уведомлению — открываем твой чат!
+self.addEventListener('notificationclick', (event) => {
+    event.notification.close();
+    event.waitUntil(
+        clients.matchAll({ type: 'window', includeUncontrolled: true }).then((windowClients) => {
+            // Если вкладка уже была где-то открыта — переключаемся на неё
+            for (let i = 0; i < windowClients.length; i++) {
+                let client = windowClients[i];
+                if (client.url === event.notification.data.url && 'focus' in client) {
+                    return client.focus();
+                }
+            }
+            // Если всё закрыто — открываем сайт заново
+            if (clients.openWindow) {
+                return clients.openWindow(event.notification.data.url);
+            }
+        })
+    );
+});
